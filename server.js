@@ -17,6 +17,12 @@ const EFFORT = ALLOWED_EFFORT.has(process.env.EFFORT)
 const PORT = Number(process.env.PORT) || 3000;
 const MAX_TOKENS = 32000;
 
+// Claude Fable 5 / Mythos 5: thinking é sempre ativo (não se envia o parâmetro)
+// e recomenda-se fallback automático para Opus 4.8 caso um pedido seja recusado
+// pelos classificadores de segurança.
+const IS_FABLE = /^claude-(fable|mythos)/.test(MODEL);
+const FALLBACK_MODEL = "claude-opus-4-8";
+
 const FRAMEWORK_DIR = path.join(__dirname, "framework");
 
 // Lê e concatena os arquivos .md do framework (o "cérebro"), em ordem de nome.
@@ -42,6 +48,7 @@ app.get("/api/health", (req, res) => {
     ok: true,
     model: MODEL,
     effort: EFFORT,
+    fallback: IS_FABLE ? FALLBACK_MODEL : null,
     keyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
   });
 });
@@ -88,29 +95,78 @@ app.post("/api/chat", async (req, res) => {
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("X-Accel-Buffering", "no");
 
-  const stream = client.messages.stream({
+  const baseParams = {
     model: MODEL,
     max_tokens: MAX_TOKENS,
-    thinking: { type: "adaptive" },
     output_config: { effort: EFFORT },
     system: systemPrompt,
     messages,
+  };
+
+  // Fable/Mythos: sem parâmetro `thinking` (é sempre ativo) e com fallback
+  // server-side para Opus 4.8. Demais modelos: thinking adaptativo.
+  const makeStream = ({ withFallbacks }) => {
+    if (!IS_FABLE) {
+      return client.messages.stream({
+        ...baseParams,
+        thinking: { type: "adaptive" },
+      });
+    }
+    if (withFallbacks) {
+      return client.beta.messages.stream({
+        ...baseParams,
+        betas: ["server-side-fallback-2026-06-01"],
+        fallbacks: [{ model: FALLBACK_MODEL }],
+      });
+    }
+    return client.beta.messages.stream(baseParams);
+  };
+
+  let currentStream = null;
+  let closed = false;
+  // Se o navegador fechar a conexão, aborta a chamada pra não gastar tokens à toa.
+  req.on("close", () => {
+    closed = true;
+    currentStream?.abort();
   });
 
-  // Se o navegador fechar a conexão, aborta a chamada pra não gastar tokens à toa.
-  req.on("close", () => stream.abort());
-
-  try {
+  let wrote = false;
+  const pipe = async (stream) => {
+    currentStream = stream;
     for await (const event of stream) {
       if (
         event.type === "content_block_delta" &&
         event.delta.type === "text_delta"
       ) {
+        wrote = true;
         res.write(event.delta.text);
+      } else if (
+        event.type === "message_delta" &&
+        event.delta?.stop_reason === "refusal"
+      ) {
+        wrote = true;
+        res.write(
+          "\n\n> ⚠️ O modelo recusou este pedido por política de segurança. Reformule e tente novamente.",
+        );
       }
     }
+  };
+
+  try {
+    await pipe(makeStream({ withFallbacks: true }));
     res.end();
   } catch (err) {
+    // Se o fallback server-side não estiver disponível para esta conta/região,
+    // tenta uma vez sem ele antes de desistir.
+    const msg = String(err?.message || err);
+    if (IS_FABLE && !wrote && !closed && /fallback/i.test(msg)) {
+      try {
+        await pipe(makeStream({ withFallbacks: false }));
+        return res.end();
+      } catch (err2) {
+        err = err2;
+      }
+    }
     if (!res.writableEnded) {
       res.write(`\n\n> ⚠️ **Erro ao gerar a resposta:** ${err?.message || err}`);
       res.end();

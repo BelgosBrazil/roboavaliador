@@ -45,9 +45,19 @@ Abra <http://localhost:3000>, preencha o formulário de um cliente e clique em *
 | Variável            | Padrão            | O que faz                                                        |
 | ------------------- | ----------------- | ---------------------------------------------------------------- |
 | `ANTHROPIC_API_KEY` | —                 | **Obrigatória.** Sua chave da Anthropic.                         |
-| `MODEL`             | `claude-opus-4-8` | Modelo. Use `claude-sonnet-5` para reduzir custo/latência.       |
+| `MODEL`             | `claude-opus-4-8` | Modelo (ver tabela abaixo).                                      |
 | `EFFORT`            | `high`            | Profundidade do raciocínio: `low`/`medium`/`high`/`xhigh`/`max`. |
 | `PORT`              | `3000`            | Porta do servidor.                                               |
+
+### Escolha do modelo
+
+| `MODEL`           | Quando usar                                                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `claude-fable-5`  | **O máximo absoluto.** O modelo mais capaz da Anthropic, para as análises mais exigentes. Mais caro. A ferramenta configura automaticamente fallback para Opus 4.8. |
+| `claude-opus-4-8` | **Padrão recomendado.** Análise de ponta com excelente custo-benefício.                                                            |
+| `claude-sonnet-5` | Mais rápido e barato, qualidade quase-Opus — bom para triagens em volume.                                                          |
+
+Para espremer o máximo em auditorias difíceis, combine com `EFFORT=xhigh`.
 
 ## O "cérebro" é editável (sem mexer no código)
 
