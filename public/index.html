@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Belgos · Roboavaliador de Campanhas</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">◆</span>
+        <div>
+          <h1>Roboavaliador de Campanhas</h1>
+          <p class="tagline">
+            Auditoria de funil de outbound (email · WhatsApp · LP) — treinada no
+            que funciona no mundo e no Brasil.
+          </p>
+        </div>
+      </div>
+      <div id="status" class="status" title="Configuração do modelo"></div>
+    </header>
+
+    <main class="layout">
+      <!-- ================= FORMULÁRIO ================= -->
+      <form id="audit-form" class="panel form">
+        <p class="intro">
+          Preencha o que tiver de <strong>um</strong> cliente. Campos vazios
+          são tratados como lacuna (e viram achado). Quanto mais dado
+          <em>quantitativo</em> (métricas) e <em>qualitativo</em> (copy, oferta,
+          leads), mais conclusivo o diagnóstico.
+        </p>
+
+        <fieldset>
+          <legend>1 · Contexto do cliente <span class="qual">qualitativo</span></legend>
+          <div class="grid-2">
+            <label>
+              Nome do cliente
+              <input name="clientName" type="text" placeholder="Ex.: Acme Contabilidade" />
+            </label>
+            <label>
+              Setor / indústria
+              <input name="sector" type="text" placeholder="Ex.: SaaS jurídico, indústria, saúde…" />
+            </label>
+          </div>
+          <label>
+            CPC — Conhecimento Profundo do Cliente
+            <span class="hint">Quem é o cliente, o que vende, diferenciais, dores que resolve.</span>
+            <textarea name="cpc" rows="4" placeholder="Descreva o cliente e o que ele oferece…"></textarea>
+          </label>
+          <label>
+            ICP — Perfil de Cliente Ideal
+            <span class="hint">Para quem ele deveria vender: cargo, porte, setor, geografia, gatilhos.</span>
+            <textarea name="icp" rows="4" placeholder="Descreva o público-alvo ideal…"></textarea>
+          </label>
+          <label>
+            Oferta / proposta de valor
+            <span class="hint">O que é oferecido na prospecção e qual o CTA.</span>
+            <textarea name="offer" rows="3" placeholder="Ex.: diagnóstico gratuito, reunião de 30min…"></textarea>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>2 · Ativos da campanha <span class="qual">qualitativo</span></legend>
+          <label>
+            Sequência(s) de email — cole o copy real
+            <span class="hint">Cole os emails da sequência, na ordem. Inclua os assuntos.</span>
+            <textarea name="emailSeq" rows="8" placeholder="Assunto: …&#10;Email 1: …&#10;&#10;Assunto: …&#10;Email 2 (follow-up): …"></textarea>
+          </label>
+          <label>
+            Mensagens / sequência de WhatsApp
+            <textarea name="waSeq" rows="4" placeholder="Cole as mensagens de WhatsApp usadas…"></textarea>
+          </label>
+          <div class="grid-2">
+            <label>
+              Landing page — URL
+              <input name="lpUrl" type="text" placeholder="https://…" />
+            </label>
+            <label>
+              LP — conteúdo / texto / HTML
+              <span class="hint">Cole o texto da página (headline, seções, CTA) ou o HTML.</span>
+              <textarea name="lpContent" rows="4" placeholder="Headline, subtítulo, provas, CTA…"></textarea>
+            </label>
+          </div>
+          <label>
+            Amostra de leads
+            <span class="hint">Cole alguns leads (cargo, empresa, porte, setor). Anonimize se preciso.</span>
+            <textarea name="leads" rows="4" placeholder="Ex.: João — Diretor Comercial — Indústria X — 200 func.…"></textarea>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>3 · Métricas do funil <span class="quant">quantitativo</span></legend>
+          <label class="period">
+            Período de referência dos números
+            <input name="q_period" type="text" placeholder="Ex.: últimos 90 dias" />
+          </label>
+          <div class="grid-metrics">
+            <label>Enviados<input name="q_sent" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Entregues<input name="q_delivered" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Abertos<input name="q_opened" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Respondidos<input name="q_replied" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Respostas positivas<input name="q_positive" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Reuniões agendadas<input name="q_meetings" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Taxa de bounce<input name="q_bounce" type="text" placeholder="Ex.: 4%" /></label>
+            <label>Reclamação de spam<input name="q_spam" type="text" placeholder="Ex.: 0,2%" /></label>
+          </div>
+          <label>
+            Outras métricas / números (texto livre)
+            <textarea name="metricsNotes" rows="3" placeholder="Cliques, oportunidades, ticket, ROI, o que mais tiver…"></textarea>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>4 · Infra & entregabilidade <span class="quant">quantitativo</span></legend>
+          <label>
+            Infraestrutura de envio
+            <span class="hint">Domínios usados, SPF/DKIM/DMARC, warmup, ferramenta de disparo, volume/dia por caixa.</span>
+            <textarea name="infra" rows="4" placeholder="Ex.: enviamos pelo domínio principal via RD Station, ~300/dia, sem warmup…"></textarea>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>5 · Histórico e panorama</legend>
+          <label>
+            Histórico de campanhas — o que já tentou e resultados
+            <textarea name="history" rows="4" placeholder="O que já foi testado, o que mudou, o que aconteceu…"></textarea>
+          </label>
+          <label>
+            Observações adicionais
+            <textarea name="notes" rows="2" placeholder="Qualquer contexto extra relevante…"></textarea>
+          </label>
+          <div class="grid-2">
+            <label>
+              Total de clientes na operação
+              <input name="q_clientsTotal" type="text" inputmode="numeric" placeholder="Ex.: 40" />
+            </label>
+            <label>
+              Clientes com a estratégia funcionando
+              <input name="q_clientsWorking" type="text" inputmode="numeric" placeholder="Ex.: 0" />
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit" id="run-btn" class="primary">
+            Rodar auditoria
+          </button>
+          <button type="button" id="clear-btn" class="ghost">Limpar</button>
+        </div>
+      </form>
+
+      <!-- ================= RESULTADO ================= -->
+      <section class="panel result" id="result-panel">
+        <div class="result-head">
+          <h2>Análise &amp; estratégia</h2>
+          <div class="result-tools hidden" id="result-tools">
+            <button type="button" id="copy-btn" class="ghost small">Copiar</button>
+            <button type="button" id="download-btn" class="ghost small">Baixar .md</button>
+          </div>
+        </div>
+
+        <div id="thread" class="thread">
+          <div class="empty-state" id="empty-state">
+            <p>A análise aparece aqui — e vira uma conversa.</p>
+            <p class="muted">
+              Primeiro o auditor avalia o funil em ordem (<strong>infra → lista →
+              oferta → copy → landing page → medição</strong>) e prioriza por
+              impacto. Depois, você conversa com ele para adaptar à sua
+              infraestrutura, reescrever campanhas e montar sequências novas.
+            </p>
+          </div>
+        </div>
+
+        <form id="chat-form" class="composer hidden">
+          <textarea
+            id="chat-input"
+            rows="2"
+            placeholder="Converse para adaptar: 'reescreva o email 2 mais curto', 'adapte à minha infra: 1 domínio só, envio pelo Gmail', 'monte uma sequência nova de 4 toques para esse ICP'…"
+          ></textarea>
+          <button type="submit" id="chat-send" class="primary">Enviar</button>
+        </form>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

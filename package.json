@@ -1,0 +1,19 @@
+{
+  "name": "roboavaliador",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Auditor de campanhas de outbound (email + WhatsApp + landing page) movido a Claude, especializado no mercado brasileiro. Você alimenta os dados de um cliente e ele diz onde o funil está vazando e como corrigir.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
