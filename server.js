@@ -124,10 +124,15 @@ app.post("/api/chat", async (req, res) => {
 
   let currentStream = null;
   let closed = false;
-  // Se o navegador fechar a conexão, aborta a chamada pra não gastar tokens à toa.
-  req.on("close", () => {
-    closed = true;
-    currentStream?.abort();
+  // Se o navegador desconectar no meio do streaming, aborta a chamada pra não
+  // gastar tokens à toa. (`res.close` também dispara ao final normal — por isso
+  // o guard em writableEnded. `req.close` não serve: no Node moderno ele dispara
+  // assim que o corpo do request termina de chegar.)
+  res.on("close", () => {
+    if (!res.writableEnded) {
+      closed = true;
+      currentStream?.abort();
+    }
   });
 
   let wrote = false;
