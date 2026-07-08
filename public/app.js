@@ -12,151 +12,562 @@ const resultTools = document.getElementById("result-tools");
 const copyBtn = document.getElementById("copy-btn");
 const downloadBtn = document.getElementById("download-btn");
 const statusEl = document.getElementById("status");
+const modelSelect = document.getElementById("model-select");
+const effortSelect = document.getElementById("effort-select");
+const systemicBtn = document.getElementById("systemic-btn");
+const clientSelect = document.getElementById("client-select");
+const clientSaveBtn = document.getElementById("client-save");
+const clientDeleteBtn = document.getElementById("client-delete");
+const clientStatus = document.getElementById("client-status");
+const auditSelect = document.getElementById("audit-select");
+const auditDeleteBtn = document.getElementById("audit-delete");
+const compareBtn = document.getElementById("compare-btn");
+const backupExportBtn = document.getElementById("backup-export");
+const backupImportBtn = document.getElementById("backup-import-btn");
+const backupImportInput = document.getElementById("backup-import");
+const lpList = document.getElementById("lp-list");
+const lpAddBtn = document.getElementById("lp-add");
+const rowsBody = document.getElementById("rows-body");
+const rowAddBtn = document.getElementById("row-add");
+const promptOptBtn = document.getElementById("prompt-opt-btn");
+const clientVersionBtn = document.getElementById("client-version-btn");
+const pdfBtn = document.getElementById("pdf-btn");
 
 // ---------- estado ----------
 let messages = []; // histórico da conversa {role, content}
 let busy = false;
-let sheet = null; // { text, filename, rows, sheets } — planilha de emails importada
+let currentAuditId = null; // auditoria em andamento (autosave)
+let currentMeta = { clientId: "", clientName: "", scope: [], kind: "auditoria" };
+let auditsCache = []; // lista de auditorias do cliente selecionado
 
-const sheetFile = document.getElementById("sheet-file");
-const sheetStatus = document.getElementById("sheet-status");
-const sheetInfo = document.getElementById("sheet-info");
-const sheetRemove = document.getElementById("sheet-remove");
-const lpUrlInput = document.getElementById("lp-url");
-const lpFetchBtn = document.getElementById("lp-fetch-btn");
-const lpStatus = document.getElementById("lp-status");
-const clientVersionBtn = document.getElementById("client-version-btn");
-const pdfBtn = document.getElementById("pdf-btn");
+const sheets = { emails: null, whatsapp: null, leads: null };
+
+const MODEL_LABELS = {
+  "claude-fable-5": "Fable 5 (máximo)",
+  "claude-opus-4-8": "Opus 4.8 (padrão)",
+  "claude-sonnet-5": "Sonnet 5 (rápido)",
+};
 
 const FUNNEL_STEPS = [
   "Infraestrutura & entregabilidade",
   "Lista & fit (ICP ↔ lista)",
   "Oferta & proposta de valor",
   "Copy & sequência",
-  "Landing page & conversão",
+  "Landing pages & conversão",
   "Medição & aprendizado",
 ];
 
-// ---------- health ----------
+function slugify(name) {
+  const s = (name || "")
+    .toString()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return s || "cliente";
+}
+
+function flash(msg, ms = 3500) {
+  clientStatus.textContent = msg;
+  if (ms) setTimeout(() => {
+    if (clientStatus.textContent === msg) clientStatus.textContent = "";
+  }, ms);
+}
+
+// ---------- health + seletores de modelo/esforço ----------
 fetch("/api/health")
   .then((r) => r.json())
   .then((h) => {
-    if (!h.keyConfigured) {
-      statusEl.innerHTML = `<span class="warn">⚠ ANTHROPIC_API_KEY não configurada</span>`;
-    } else {
-      statusEl.textContent = `${h.model || "—"} · esforço ${h.effort}`;
+    for (const m of h.models || []) {
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = MODEL_LABELS[m] || m;
+      if (m === h.model) opt.selected = true;
+      modelSelect.appendChild(opt);
     }
+    for (const e of h.efforts || []) {
+      const opt = document.createElement("option");
+      opt.value = e;
+      opt.textContent = e;
+      if (e === h.effort) opt.selected = true;
+      effortSelect.appendChild(opt);
+    }
+    statusEl.innerHTML = h.keyConfigured
+      ? ""
+      : `<span class="warn">⚠ ANTHROPIC_API_KEY não configurada</span>`;
   })
   .catch(() => {});
 
-// ---------- planilha de emails ----------
-sheetFile.addEventListener("change", async () => {
-  const file = sheetFile.files?.[0];
-  if (!file) return;
-  sheetInfo.textContent = `Lendo ${file.name}…`;
-  sheetStatus.classList.remove("hidden");
+// ---------- clientes salvos ----------
+async function loadClients(selectId) {
   try {
-    const buf = await file.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    let bin = "";
-    const CHUNK = 0x8000;
-    for (let i = 0; i < bytes.length; i += CHUNK) {
-      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+    const list = await (await fetch("/api/clients")).json();
+    const current = selectId ?? clientSelect.value;
+    clientSelect.innerHTML = `<option value="">— cliente novo (não salvo) —</option>`;
+    for (const c of list) {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.name;
+      clientSelect.appendChild(opt);
     }
-    const resp = await fetch("/api/parse-sheet", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: file.name, dataBase64: btoa(bin) }),
-    });
-    const result = await resp.json();
-    if (!resp.ok) throw new Error(result.error || `Erro ${resp.status}`);
-    sheet = { ...result, filename: file.name };
-    sheetInfo.textContent = `✓ ${file.name} — ${result.rows} registro(s) em ${result.sheets} aba(s). Será incluída na auditoria.`;
-  } catch (err) {
-    sheet = null;
-    sheetFile.value = "";
-    sheetInfo.textContent = `⚠️ ${err.message}`;
+    clientSelect.value = current || "";
+  } catch {
+    /* servidor fora do ar */
   }
-});
+}
 
-sheetRemove.addEventListener("click", () => {
-  sheet = null;
-  sheetFile.value = "";
-  sheetStatus.classList.add("hidden");
-});
-
-// ---------- buscar LP pela URL ----------
-lpFetchBtn.addEventListener("click", async () => {
-  const url = lpUrlInput.value.trim();
-  if (!url) {
-    lpStatus.textContent = "Informe a URL primeiro.";
-    return;
-  }
-  lpFetchBtn.disabled = true;
-  lpStatus.textContent = "Buscando a página…";
+clientSelect.addEventListener("change", async () => {
+  const id = clientSelect.value;
+  await refreshAudits(id);
+  if (!id) return;
   try {
-    const resp = await fetch("/api/fetch-lp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-    const result = await resp.json();
-    if (!resp.ok) throw new Error(result.error || `Erro ${resp.status}`);
-    form.elements.lpContent.value = result.text;
-    lpStatus.textContent = `✓ Conteúdo extraído de ${result.finalUrl} — revise/edite no campo abaixo.`;
-  } catch (err) {
-    lpStatus.textContent = `⚠️ ${err.message}`;
-  } finally {
-    lpFetchBtn.disabled = false;
+    const c = await (await fetch(`/api/clients/${id}`)).json();
+    fillForm(c.intake || {});
+    flash(`✓ Cliente "${c.name}" carregado.`);
+  } catch {
+    flash("⚠️ Não consegui carregar este cliente.");
   }
 });
 
-// ---------- versão para o cliente + PDF ----------
-clientVersionBtn.addEventListener("click", () => {
-  if (busy || messages.length === 0) return;
-  runTurn(
-    "Gere agora a **versão para o cliente** desta auditoria, seguindo exatamente a seção \"Documento para o cliente\" do método. Considere tudo que combinamos nesta conversa (incluindo as adaptações), e não inclua nada que tenha sido descartado.",
-    { type: "bubble", text: "Gerar a versão de apresentação para o cliente" },
-    false,
-  );
-});
-
-pdfBtn.addEventListener("click", () => {
-  const last = [...messages].reverse().find((m) => m.role === "assistant");
-  if (!last) return;
-  const clientName = form.elements.clientName?.value?.trim() || "Cliente";
-  const win = window.open("", "_blank");
-  if (!win) {
-    alert("O navegador bloqueou a janela. Permita pop-ups para gerar o PDF.");
+clientSaveBtn.addEventListener("click", async () => {
+  const intake = collectIntake();
+  if (!intake.clientName?.trim()) {
+    flash("⚠️ Preencha o nome do cliente antes de salvar.");
     return;
   }
-  win.document.write(buildPrintHtml(last.content, { clientName }));
-  win.document.close();
-  win.focus();
-  setTimeout(() => win.print(), 400);
+  try {
+    const saved = await (
+      await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: intake.clientName, intake }),
+      })
+    ).json();
+    if (saved.error) throw new Error(saved.error);
+    await loadClients(saved.id);
+    await refreshAudits(saved.id);
+    flash(`✓ Cliente "${saved.name}" salvo.`);
+  } catch (err) {
+    flash(`⚠️ ${err.message}`);
+  }
 });
 
-// ---------- turno 1: auditoria ----------
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
+clientDeleteBtn.addEventListener("click", async () => {
+  const id = clientSelect.value;
+  if (!id) return flash("Selecione um cliente salvo para excluir.");
+  const name = clientSelect.options[clientSelect.selectedIndex].textContent;
+  if (!confirm(`Excluir o cliente salvo "${name}"? (as auditorias ficam no histórico)`)) return;
+  await fetch(`/api/clients/${id}`, { method: "DELETE" });
+  await loadClients("");
+  await refreshAudits("");
+  flash("Cliente excluído.");
+});
+
+// ---------- backup ----------
+backupExportBtn.addEventListener("click", async () => {
+  const data = await (await fetch("/api/backup")).json();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `belgos-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+backupImportBtn.addEventListener("click", () => backupImportInput.click());
+backupImportInput.addEventListener("change", async () => {
+  const file = backupImportInput.files?.[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const r = await (
+      await fetch("/api/backup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+    ).json();
+    if (r.error) throw new Error(r.error);
+    await loadClients();
+    await refreshAudits(clientSelect.value);
+    flash(`✓ Backup importado: ${r.clients} cliente(s), ${r.audits} auditoria(s).`);
+  } catch (err) {
+    flash(`⚠️ ${err.message}`);
+  } finally {
+    backupImportInput.value = "";
+  }
+});
+
+// ---------- histórico de auditorias ----------
+async function refreshAudits(clientId) {
+  auditsCache = [];
+  auditSelect.innerHTML = `<option value="">— histórico de auditorias —</option>`;
+  if (!clientId) {
+    compareBtn.disabled = true;
+    return;
+  }
+  try {
+    auditsCache = await (await fetch(`/api/audits?clientId=${encodeURIComponent(clientId)}`)).json();
+    for (const a of auditsCache) {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      const d = new Date(a.updatedAt);
+      const date = d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      const kind = a.kind && a.kind !== "auditoria" ? ` [${a.kind}]` : "";
+      opt.textContent = `${date}${kind} · ${a.turns} resposta(s) · ${a.snippet.slice(0, 60)}`;
+      auditSelect.appendChild(opt);
+    }
+    const audCount = auditsCache.filter((a) => !a.kind || a.kind === "auditoria").length;
+    compareBtn.disabled = audCount < 2;
+  } catch {
+    compareBtn.disabled = true;
+  }
+}
+
+auditSelect.addEventListener("change", async () => {
+  const id = auditSelect.value;
+  if (!id || busy) return;
+  try {
+    const a = await (await fetch(`/api/audits/${id}`)).json();
+    if (a.error) throw new Error(a.error);
+    messages = a.messages || [];
+    currentAuditId = a.id;
+    currentMeta = {
+      clientId: a.clientId,
+      clientName: a.clientName,
+      scope: a.scope || [],
+      kind: a.kind || "auditoria",
+    };
+    const d = new Date(a.createdAt || a.updatedAt).toLocaleDateString("pt-BR");
+    renderThreadFromMessages(messages, `Auditoria carregada · ${a.clientName} · ${d}`);
+    flash("✓ Auditoria carregada — a conversa continua de onde parou.");
+  } catch (err) {
+    flash(`⚠️ ${err.message}`);
+  }
+});
+
+auditDeleteBtn.addEventListener("click", async () => {
+  const id = auditSelect.value;
+  if (!id) return flash("Selecione uma auditoria no histórico para excluir.");
+  if (!confirm("Excluir esta auditoria do histórico?")) return;
+  await fetch(`/api/audits/${id}`, { method: "DELETE" });
+  if (currentAuditId === id) currentAuditId = null;
+  await refreshAudits(clientSelect.value);
+  flash("Auditoria excluída.");
+});
+
+// ---------- comparação de evolução ----------
+compareBtn.addEventListener("click", async () => {
   if (busy) return;
+  const auds = auditsCache.filter((a) => !a.kind || a.kind === "auditoria");
+  if (auds.length < 2) return;
+  try {
+    const [recente, anterior] = await Promise.all([
+      (await fetch(`/api/audits/${auds[0].id}`)).json(),
+      (await fetch(`/api/audits/${auds[1].id}`)).json(),
+    ]);
+    const rep = (a) => (a.messages || []).find((m) => m.role === "assistant")?.content || "(sem relatório)";
+    const dt = (a) => new Date(a.createdAt || a.updatedAt).toLocaleDateString("pt-BR");
+    const clientName = recente.clientName;
+    const msg = [
+      `# Comparação de evolução — ${clientName}`,
+      ``,
+      `Siga a seção "Comparação de evolução" do método.`,
+      ``,
+      `## Auditoria ANTERIOR (${dt(anterior)})`,
+      rep(anterior),
+      ``,
+      `---`,
+      ``,
+      `## Auditoria MAIS RECENTE (${dt(recente)})`,
+      rep(recente),
+    ].join("\n");
+
+    startConversation({
+      clientId: recente.clientId,
+      clientName,
+      kind: "comparacao",
+      scope: [],
+    });
+    runTurn(msg, { type: "chip", text: `Comparação de evolução · ${clientName}` }, true);
+  } catch (err) {
+    flash(`⚠️ ${err.message}`);
+  }
+});
+
+// ---------- análise sistêmica da operação ----------
+systemicBtn.addEventListener("click", async () => {
+  if (busy) return;
+  try {
+    const overview = await (await fetch("/api/audits/overview")).json();
+    if (!Array.isArray(overview) || overview.length < 2) {
+      flash("⚠️ A análise da operação precisa de auditorias salvas de pelo menos 2 clientes.");
+      return;
+    }
+    const excerpt = (report) => {
+      const cut = report.split(/\n##\s*2/)[0];
+      return (cut || report).slice(0, 2600);
+    };
+    const parts = [
+      `# Análise sistêmica da operação — ${overview.length} clientes`,
+      ``,
+      `Siga a seção "Análise sistêmica da operação" do método. Abaixo, o veredito da auditoria mais recente de cada cliente:`,
+      ``,
+    ];
+    for (const o of overview) {
+      parts.push(`## ${o.clientName} (${new Date(o.date).toLocaleDateString("pt-BR")})`);
+      parts.push(excerpt(o.report));
+      parts.push("");
+    }
+    startConversation({
+      clientId: "operacao",
+      clientName: "Operação (todos os clientes)",
+      kind: "analise-operacao",
+      scope: [],
+    });
+    runTurn(parts.join("\n"), { type: "chip", text: `Análise sistêmica · ${overview.length} clientes` }, true);
+  } catch (err) {
+    flash(`⚠️ ${err.message}`);
+  }
+});
+
+// ---------- planilhas (emails / whatsapp / leads) ----------
+function wireSheet(slot) {
+  const input = document.getElementById(`sheet-${slot}`);
+  const status = document.getElementById(`sheet-${slot}-status`);
+  const info = document.getElementById(`sheet-${slot}-info`);
+  const remove = document.getElementById(`sheet-${slot}-remove`);
+
+  input.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    info.textContent = `Lendo ${file.name}…`;
+    status.classList.remove("hidden");
+    try {
+      const buf = await file.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let bin = "";
+      const CHUNK = 0x8000;
+      for (let i = 0; i < bytes.length; i += CHUNK) {
+        bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+      }
+      const resp = await fetch("/api/parse-sheet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, dataBase64: btoa(bin) }),
+      });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || `Erro ${resp.status}`);
+      sheets[slot] = { ...result, filename: file.name };
+      info.textContent = `✓ ${file.name} — ${result.rows} registro(s) em ${result.sheets} aba(s). Incluída na auditoria.`;
+    } catch (err) {
+      sheets[slot] = null;
+      input.value = "";
+      info.textContent = `⚠️ ${err.message}`;
+    }
+  });
+
+  remove.addEventListener("click", () => {
+    sheets[slot] = null;
+    input.value = "";
+    status.classList.add("hidden");
+  });
+}
+["emails", "whatsapp", "leads"].forEach(wireSheet);
+
+function restoreSheet(slot, text) {
+  const status = document.getElementById(`sheet-${slot}-status`);
+  const info = document.getElementById(`sheet-${slot}-info`);
+  if (text) {
+    sheets[slot] = { text, filename: "(restaurada do cliente salvo)" };
+    info.textContent = `✓ Planilha restaurada do cliente salvo. Incluída na auditoria.`;
+    status.classList.remove("hidden");
+  } else {
+    sheets[slot] = null;
+    status.classList.add("hidden");
+  }
+}
+
+// ---------- landing pages (múltiplas) ----------
+function addLpBlock(lp = {}) {
+  const block = document.createElement("div");
+  block.className = "lp-block";
+  block.innerHTML = `
+    <div class="lp-head">
+      <input type="text" class="lp-name" placeholder="Identificador da LP (ex.: LP diagnóstico — ICP 1)" />
+      <button type="button" class="ghost small lp-remove">✕</button>
+    </div>
+    <div class="lp-row">
+      <input type="text" class="lp-url" placeholder="https://…" />
+      <button type="button" class="ghost lp-fetch">Buscar</button>
+    </div>
+    <span class="hint lp-status"></span>
+    <textarea class="lp-content" rows="4" placeholder="Conteúdo da LP (preenchido pelo Buscar, ou cole manualmente)"></textarea>
+  `;
+  block.querySelector(".lp-name").value = lp.name || "";
+  block.querySelector(".lp-url").value = lp.url || "";
+  block.querySelector(".lp-content").value = lp.content || "";
+
+  block.querySelector(".lp-remove").addEventListener("click", () => {
+    block.remove();
+    if (!lpList.children.length) addLpBlock();
+  });
+
+  const fetchBtn = block.querySelector(".lp-fetch");
+  const lpStatus = block.querySelector(".lp-status");
+  fetchBtn.addEventListener("click", async () => {
+    const url = block.querySelector(".lp-url").value.trim();
+    if (!url) return (lpStatus.textContent = "Informe a URL primeiro.");
+    fetchBtn.disabled = true;
+    lpStatus.textContent = "Buscando a página…";
+    try {
+      const resp = await fetch("/api/fetch-lp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || `Erro ${resp.status}`);
+      block.querySelector(".lp-content").value = result.text;
+      lpStatus.textContent = `✓ Conteúdo extraído de ${result.finalUrl} — revise/edite abaixo.`;
+    } catch (err) {
+      lpStatus.textContent = `⚠️ ${err.message}`;
+    } finally {
+      fetchBtn.disabled = false;
+    }
+  });
+
+  lpList.appendChild(block);
+}
+
+lpAddBtn.addEventListener("click", () => addLpBlock());
+
+function collectLps() {
+  return [...lpList.querySelectorAll(".lp-block")]
+    .map((b) => ({
+      name: b.querySelector(".lp-name").value.trim(),
+      url: b.querySelector(".lp-url").value.trim(),
+      content: b.querySelector(".lp-content").value.trim(),
+    }))
+    .filter((lp) => lp.name || lp.url || lp.content);
+}
+
+function fillLps(lps) {
+  lpList.innerHTML = "";
+  const list = Array.isArray(lps) && lps.length ? lps : [{}];
+  list.forEach((lp) => addLpBlock(lp));
+}
+
+// ---------- métricas por estratégia/disparo ----------
+const ROW_FIELDS = ["strategy", "dispatch", "channel", "sent", "delivered", "opened", "replied", "positive", "meetings", "notes"];
+
+function addRow(values = {}) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><input class="r-strategy" type="text" placeholder="Estratégia X" /></td>
+    <td><input class="r-dispatch" type="text" placeholder="1" /></td>
+    <td><select class="r-channel"><option value="email">email</option><option value="whatsapp">WhatsApp</option></select></td>
+    <td><input class="r-sent" type="text" inputmode="numeric" /></td>
+    <td><input class="r-delivered" type="text" inputmode="numeric" /></td>
+    <td><input class="r-opened" type="text" inputmode="numeric" /></td>
+    <td><input class="r-replied" type="text" inputmode="numeric" /></td>
+    <td><input class="r-positive" type="text" inputmode="numeric" /></td>
+    <td><input class="r-meetings" type="text" inputmode="numeric" /></td>
+    <td><input class="r-notes" type="text" placeholder="obs." /></td>
+    <td><button type="button" class="ghost small r-remove">✕</button></td>
+  `;
+  for (const f of ROW_FIELDS) {
+    const el = tr.querySelector(`.r-${f}`);
+    if (el && values[f] !== undefined) el.value = values[f];
+  }
+  tr.querySelector(".r-remove").addEventListener("click", () => tr.remove());
+  rowsBody.appendChild(tr);
+}
+
+rowAddBtn.addEventListener("click", () => addRow());
+
+function collectRows() {
+  return [...rowsBody.querySelectorAll("tr")]
+    .map((tr) => {
+      const row = {};
+      for (const f of ROW_FIELDS) row[f] = tr.querySelector(`.r-${f}`)?.value?.trim() || "";
+      return row;
+    })
+    .filter((r) => Object.entries(r).some(([k, v]) => k !== "channel" && v));
+}
+
+function fillRows(rows) {
+  rowsBody.innerHTML = "";
+  (Array.isArray(rows) ? rows : []).forEach((r) => addRow(r));
+}
+
+// ---------- coleta e restauração do formulário ----------
+function collectIntake() {
   const fd = new FormData(form);
   const data = Object.fromEntries(fd.entries());
   data.scope = fd.getAll("scope");
-  data.emailSheet = sheet?.text || "";
-  const brief = buildUserPrompt(data);
+  data.emailSheet = sheets.emails?.text || "";
+  data.waSheet = sheets.whatsapp?.text || "";
+  data.leadsSheet = sheets.leads?.text || "";
+  data.lps = collectLps();
+  data.dispatchRows = collectRows();
+  return data;
+}
 
-  // começa uma conversa nova
+function fillForm(intake) {
+  form.reset();
+  for (const [key, value] of Object.entries(intake || {})) {
+    const el = form.elements[key];
+    if (el && typeof value === "string" && el.type !== "checkbox" && el.type !== "file") {
+      el.value = value;
+    }
+  }
+  // escopo
+  const scope = Array.isArray(intake.scope) && intake.scope.length ? intake.scope : null;
+  for (const cb of form.querySelectorAll('input[name="scope"]')) {
+    cb.checked = scope ? scope.includes(cb.value) : true;
+  }
+  // LPs (compatível com o formato antigo lpUrl/lpContent)
+  const lps = Array.isArray(intake.lps) && intake.lps.length
+    ? intake.lps
+    : intake.lpUrl || intake.lpContent
+      ? [{ name: "", url: intake.lpUrl || "", content: intake.lpContent || "" }]
+      : [];
+  fillLps(lps);
+  fillRows(intake.dispatchRows || []);
+  restoreSheet("emails", intake.emailSheet || "");
+  restoreSheet("whatsapp", intake.waSheet || "");
+  restoreSheet("leads", intake.leadsSheet || "");
+}
+
+// ---------- conversa ----------
+function startConversation(meta) {
   messages = [];
+  currentAuditId = null;
+  currentMeta = { scope: [], kind: "auditoria", ...meta };
   thread.innerHTML = "";
   resultTools.classList.add("hidden");
   chatForm.classList.add("hidden");
+  auditSelect.value = "";
+}
 
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (busy) return;
+  const data = collectIntake();
+  const brief = buildUserPrompt(data);
   const nome = (data.clientName || "").trim() || "cliente";
+  startConversation({
+    clientId: slugify(nome),
+    clientName: nome,
+    scope: data.scope,
+    kind: "auditoria",
+  });
   runTurn(brief, { type: "chip", text: `Brief enviado · ${nome}` }, true);
 });
 
-// ---------- turnos seguintes: conversa ----------
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
   if (busy) return;
@@ -166,7 +577,6 @@ chatForm.addEventListener("submit", (e) => {
   runTurn(text, { type: "bubble", text }, false);
 });
 
-// Enter envia; Shift+Enter quebra linha
 chatInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -175,14 +585,14 @@ chatInput.addEventListener("keydown", (e) => {
 });
 
 clearBtn.addEventListener("click", () => {
-  form.reset();
+  fillForm({});
   messages = [];
-  sheet = null;
-  sheetFile.value = "";
-  sheetStatus.classList.add("hidden");
-  thread.innerHTML = `<div class="empty-state" id="empty-state"><p>A análise aparece aqui — e vira uma conversa.</p></div>`;
+  currentAuditId = null;
+  thread.innerHTML = `<div class="empty-state" id="empty-state"><p>A análise aparece aqui.</p></div>`;
   resultTools.classList.add("hidden");
   chatForm.classList.add("hidden");
+  clientSelect.value = "";
+  refreshAudits("");
 });
 
 copyBtn.addEventListener("click", async () => {
@@ -196,16 +606,80 @@ copyBtn.addEventListener("click", async () => {
 });
 
 downloadBtn.addEventListener("click", () => {
-  const blob = new Blob([conversationMarkdown()], {
-    type: "text/markdown;charset=utf-8",
-  });
+  const blob = new Blob([conversationMarkdown()], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "belgos-analise.md";
+  a.download = `belgos-${currentMeta.clientId || "analise"}.md`;
   a.click();
   URL.revokeObjectURL(url);
 });
+
+promptOptBtn.addEventListener("click", () => {
+  if (busy || messages.length === 0) return;
+  runTurn(
+    "Otimize o **prompt de geração de conteúdo 1:1**, seguindo exatamente a seção \"Otimização do prompt de geração 1:1\" do método. Alinhe o prompt novo à estratégia acordada nesta conversa. Se eu tiver múltiplas estratégias/ICPs, estruture o prompt para receber a estratégia como variável de entrada.",
+    { type: "bubble", text: "Otimizar o prompt de geração 1:1" },
+    false,
+  );
+});
+
+clientVersionBtn.addEventListener("click", () => {
+  if (busy || messages.length === 0) return;
+  runTurn(
+    "Gere agora a **versão para o cliente** desta auditoria, seguindo exatamente a seção \"Documento para o cliente\" do método. Considere tudo que combinamos nesta conversa (incluindo as adaptações), e não inclua nada que tenha sido descartado.",
+    { type: "bubble", text: "Gerar a versão de apresentação para o cliente" },
+    false,
+  );
+});
+
+pdfBtn.addEventListener("click", () => {
+  const last = [...messages].reverse().find((m) => m.role === "assistant");
+  if (last) openPdf(last.content);
+});
+
+function openPdf(markdown) {
+  const clientName =
+    currentMeta.clientName || form.elements.clientName?.value?.trim() || "Cliente";
+  const win = window.open("", "_blank");
+  if (!win) {
+    alert("O navegador bloqueou a janela. Permita pop-ups para gerar o PDF.");
+    return;
+  }
+  win.document.write(buildPrintHtml(markdown, { clientName }));
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 400);
+}
+
+// ---------- autosave do histórico ----------
+async function autosaveAudit() {
+  if (!messages.some((m) => m.role === "assistant")) return;
+  try {
+    const r = await (
+      await fetch("/api/audits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: currentAuditId || undefined,
+          clientId: currentMeta.clientId,
+          clientName: currentMeta.clientName,
+          scope: currentMeta.scope,
+          kind: currentMeta.kind,
+          messages,
+        }),
+      })
+    ).json();
+    if (r.id) currentAuditId = r.id;
+    if (clientSelect.value && clientSelect.value === currentMeta.clientId) {
+      const sel = auditSelect.value;
+      await refreshAudits(clientSelect.value);
+      auditSelect.value = sel && sel !== currentAuditId ? sel : "";
+    }
+  } catch {
+    /* autosave silencioso */
+  }
+}
 
 // ---------- núcleo: roda um turno e transmite a resposta ----------
 async function runTurn(userContent, userDisplay, isFirst) {
@@ -216,7 +690,7 @@ async function runTurn(userContent, userDisplay, isFirst) {
   if (userDisplay) appendUser(userDisplay);
   messages.push({ role: "user", content: userContent });
 
-  const { bodyEl, stopIndicator } = appendAssistant(isFirst);
+  const { bodyEl, turnEl, stopIndicator } = appendAssistant(isFirst);
   scrollThread();
 
   let full = "";
@@ -224,7 +698,11 @@ async function runTurn(userContent, userDisplay, isFirst) {
     const resp = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({
+        messages,
+        model: modelSelect.value || undefined,
+        effort: effortSelect.value || undefined,
+      }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
@@ -253,10 +731,12 @@ async function runTurn(userContent, userDisplay, isFirst) {
 
     stopIndicator();
     bodyEl.innerHTML = renderMarkdown(full);
+    attachMsgTools(turnEl, full);
     messages.push({ role: "assistant", content: full });
     resultTools.classList.remove("hidden");
     chatForm.classList.remove("hidden");
     scrollThread();
+    autosaveAudit();
     if (!isFirst) chatInput.focus();
   } catch (err) {
     stopIndicator();
@@ -277,6 +757,8 @@ function setBusy(b) {
   runBtn.textContent = b ? "Analisando…" : "Rodar auditoria";
   chatSend.disabled = b;
   chatInput.disabled = b;
+  systemicBtn.disabled = b;
+  compareBtn.disabled = b || auditsCache.filter((a) => !a.kind || a.kind === "auditoria").length < 2;
 }
 
 function removeEmptyState() {
@@ -324,10 +806,60 @@ function appendAssistant(isFirst) {
 
   return {
     bodyEl: body,
+    turnEl: turn,
     stopIndicator: () => {
       if (timer) clearInterval(timer);
     },
   };
+}
+
+// barra de ações por resposta (PDF / copiar SÓ este trecho)
+function attachMsgTools(turnEl, content) {
+  const bar = document.createElement("div");
+  bar.className = "msg-tools";
+  const pdf = document.createElement("button");
+  pdf.type = "button";
+  pdf.className = "ghost tiny";
+  pdf.textContent = "PDF desta resposta";
+  pdf.addEventListener("click", () => openPdf(content));
+  const cp = document.createElement("button");
+  cp.type = "button";
+  cp.className = "ghost tiny";
+  cp.textContent = "Copiar";
+  cp.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      cp.textContent = "Copiado!";
+      setTimeout(() => (cp.textContent = "Copiar"), 1500);
+    } catch {}
+  });
+  bar.append(pdf, cp);
+  turnEl.appendChild(bar);
+}
+
+function renderThreadFromMessages(msgs, firstLabel) {
+  thread.innerHTML = "";
+  msgs.forEach((m, i) => {
+    if (m.role === "user") {
+      appendUser(
+        i === 0
+          ? { type: "chip", text: firstLabel || "Brief" }
+          : { type: "bubble", text: m.content.length > 400 ? m.content.slice(0, 400) + "…" : m.content },
+      );
+    } else {
+      const turn = document.createElement("div");
+      turn.className = "turn assistant";
+      const body = document.createElement("div");
+      body.className = "turn-body report";
+      body.innerHTML = renderMarkdown(m.content);
+      turn.appendChild(body);
+      attachMsgTools(turn, m.content);
+      thread.appendChild(turn);
+    }
+  });
+  resultTools.classList.remove("hidden");
+  chatForm.classList.remove("hidden");
+  scrollThread();
 }
 
 function conversationMarkdown() {
@@ -342,6 +874,10 @@ function conversationMarkdown() {
   });
   return md.trim();
 }
+
+// ---------- inicialização ----------
+fillLps([{}]);
+loadClients();
 
 // ---------- markdown renderer (self-contained, sem dependências) ----------
 function esc(s) {

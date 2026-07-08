@@ -8,11 +8,15 @@ import Anthropic from "@anthropic-ai/sdk";
 import { buildSystemPrompt } from "./public/buildPrompt.js";
 import { parseSheetBuffer } from "./lib/parseSheet.js";
 import { fetchLandingPage } from "./lib/fetchLp.js";
+import * as store from "./lib/store.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const MODEL = process.env.MODEL || "claude-opus-4-8";
+const ALLOWED_MODELS = ["claude-fable-5", "claude-opus-4-8", "claude-sonnet-5"];
 const ALLOWED_EFFORT = new Set(["low", "medium", "high", "xhigh", "max"]);
+const MODEL = ALLOWED_MODELS.includes(process.env.MODEL)
+  ? process.env.MODEL
+  : process.env.MODEL || "claude-opus-4-8";
 const EFFORT = ALLOWED_EFFORT.has(process.env.EFFORT)
   ? process.env.EFFORT
   : "high";
@@ -22,7 +26,7 @@ const MAX_TOKENS = 32000;
 // Claude Fable 5 / Mythos 5: thinking é sempre ativo (não se envia o parâmetro)
 // e recomenda-se fallback automático para Opus 4.8 caso um pedido seja recusado
 // pelos classificadores de segurança.
-const IS_FABLE = /^claude-(fable|mythos)/.test(MODEL);
+const isFableModel = (m) => /^claude-(fable|mythos)/.test(m);
 const FALLBACK_MODEL = "claude-opus-4-8";
 
 const FRAMEWORK_DIR = path.join(__dirname, "framework");
@@ -50,9 +54,112 @@ app.get("/api/health", (req, res) => {
     ok: true,
     model: MODEL,
     effort: EFFORT,
-    fallback: IS_FABLE ? FALLBACK_MODEL : null,
+    models: ALLOWED_MODELS,
+    efforts: [...ALLOWED_EFFORT],
+    fallback: isFableModel(MODEL) ? FALLBACK_MODEL : null,
     keyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
   });
+});
+
+// ---------- clientes salvos ----------
+app.get("/api/clients", async (req, res) => {
+  try {
+    res.json(await store.listClients());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/clients/:id", async (req, res) => {
+  try {
+    res.json(await store.getClient(req.params.id));
+  } catch {
+    res.status(404).json({ error: "Cliente não encontrado." });
+  }
+});
+
+app.post("/api/clients", async (req, res) => {
+  try {
+    const { name, intake } = req.body || {};
+    if (!name?.toString().trim()) {
+      return res.status(400).json({ error: "Dê um nome ao cliente antes de salvar." });
+    }
+    res.json(await store.saveClient({ name, intake }));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete("/api/clients/:id", async (req, res) => {
+  try {
+    await store.deleteClient(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ---------- histórico de auditorias ----------
+app.get("/api/audits", async (req, res) => {
+  try {
+    res.json(await store.listAudits(req.query.clientId || undefined));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/audits/overview", async (req, res) => {
+  try {
+    res.json(await store.auditsOverview());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/audits/:id", async (req, res) => {
+  try {
+    res.json(await store.getAudit(req.params.id));
+  } catch {
+    res.status(404).json({ error: "Auditoria não encontrada." });
+  }
+});
+
+app.post("/api/audits", async (req, res) => {
+  try {
+    res.json(await store.saveAudit(req.body || {}));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete("/api/audits/:id", async (req, res) => {
+  try {
+    await store.deleteAudit(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ---------- backup ----------
+app.get("/api/backup", async (req, res) => {
+  try {
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="belgos-backup-${new Date().toISOString().slice(0, 10)}.json"`,
+    );
+    res.json(await store.exportBackup());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/backup", async (req, res) => {
+  try {
+    res.json(await store.importBackup(req.body));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Converte planilha (.xlsx/.csv) com exemplos de emails em texto para o brief.
@@ -122,15 +229,20 @@ app.post("/api/chat", async (req, res) => {
       .json({ error: `Falha ao carregar o framework: ${err.message}` });
   }
 
+  // Modelo/esforço por requisição (seletor na interface); default do .env.
+  const model = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : MODEL;
+  const effort = ALLOWED_EFFORT.has(req.body?.effort) ? req.body.effort : EFFORT;
+  const isFable = isFableModel(model);
+
   res.status(200);
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("X-Accel-Buffering", "no");
 
   const baseParams = {
-    model: MODEL,
+    model,
     max_tokens: MAX_TOKENS,
-    output_config: { effort: EFFORT },
+    output_config: { effort },
     system: systemPrompt,
     messages,
   };
@@ -138,7 +250,7 @@ app.post("/api/chat", async (req, res) => {
   // Fable/Mythos: sem parâmetro `thinking` (é sempre ativo) e com fallback
   // server-side para Opus 4.8. Demais modelos: thinking adaptativo.
   const makeStream = ({ withFallbacks }) => {
-    if (!IS_FABLE) {
+    if (!isFable) {
       return client.messages.stream({
         ...baseParams,
         thinking: { type: "adaptive" },
@@ -196,7 +308,7 @@ app.post("/api/chat", async (req, res) => {
     // Se o fallback server-side não estiver disponível para esta conta/região,
     // tenta uma vez sem ele antes de desistir.
     const msg = String(err?.message || err);
-    if (IS_FABLE && !wrote && !closed && /fallback/i.test(msg)) {
+    if (isFable && !wrote && !closed && /fallback/i.test(msg)) {
       try {
         await pipe(makeStream({ withFallbacks: false }));
         return res.end();

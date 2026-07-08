@@ -18,12 +18,45 @@
           </p>
         </div>
       </div>
-      <div id="status" class="status" title="Configuração do modelo"></div>
+      <div class="topbar-controls">
+        <label class="ctl">
+          Modelo
+          <select id="model-select"></select>
+        </label>
+        <label class="ctl">
+          Esforço
+          <select id="effort-select"></select>
+        </label>
+        <button type="button" id="systemic-btn" class="ghost small" title="Cruza as auditorias mais recentes de todos os clientes salvos e encontra a falha comum da operação">Análise da operação</button>
+        <div id="status" class="status" title="Configuração do modelo"></div>
+      </div>
     </header>
 
     <main class="layout">
       <!-- ================= FORMULÁRIO ================= -->
       <form id="audit-form" class="panel form">
+        <div class="client-bar">
+          <div class="client-row">
+            <select id="client-select" title="Clientes salvos">
+              <option value="">— cliente novo (não salvo) —</option>
+            </select>
+            <button type="button" id="client-save" class="ghost small">Salvar cliente</button>
+            <button type="button" id="client-delete" class="ghost small" title="Exclui o cliente salvo selecionado">Excluir</button>
+          </div>
+          <div class="client-row">
+            <select id="audit-select" title="Auditorias anteriores deste cliente">
+              <option value="">— histórico de auditorias —</option>
+            </select>
+            <button type="button" id="compare-btn" class="ghost small" title="Compara as duas auditorias mais recentes deste cliente (evolução)">Comparar evolução</button>
+            <button type="button" id="audit-delete" class="ghost small" title="Exclui a auditoria selecionada no histórico">✕</button>
+            <span class="spacer"></span>
+            <button type="button" id="backup-export" class="ghost small" title="Baixa um backup JSON de todos os clientes e auditorias">⬇ Backup</button>
+            <button type="button" id="backup-import-btn" class="ghost small" title="Restaura um backup JSON">⬆ Importar</button>
+            <input type="file" id="backup-import" accept=".json" class="visually-hidden" />
+          </div>
+          <span id="client-status" class="hint client-status"></span>
+        </div>
+
         <p class="intro">
           Preencha o que tiver de <strong>um</strong> cliente. Campos vazios
           são tratados como lacuna (e viram achado). Quanto mais dado
@@ -44,7 +77,7 @@
             <label class="check"><input type="checkbox" name="scope" value="emails" checked /> Emails</label>
             <label class="check"><input type="checkbox" name="scope" value="whatsapp" checked /> WhatsApp</label>
             <label class="check"><input type="checkbox" name="scope" value="prompt1a1" checked /> Prompt de geração 1:1</label>
-            <label class="check"><input type="checkbox" name="scope" value="lp" checked /> Landing page</label>
+            <label class="check"><input type="checkbox" name="scope" value="lp" checked /> Landing pages</label>
             <label class="check"><input type="checkbox" name="scope" value="metricas" checked /> Métricas &amp; infra</label>
           </div>
         </fieldset>
@@ -67,14 +100,19 @@
             <textarea name="cpc" rows="4" placeholder="Descreva o cliente e o que ele oferece…"></textarea>
           </label>
           <label>
-            ICP — Perfil de Cliente Ideal
-            <span class="hint">Para quem ele deveria vender: cargo, porte, setor, geografia, gatilhos.</span>
-            <textarea name="icp" rows="4" placeholder="Descreva o público-alvo ideal…"></textarea>
+            ICP(s) — Perfil(is) de Cliente Ideal
+            <span class="hint">Pode haver mais de um: identifique cada um (ICP 1: …, ICP 2: …) — as estratégias e LPs podem referenciar esses nomes.</span>
+            <textarea name="icp" rows="4" placeholder="ICP 1: founders de SaaS pós-seed…&#10;ICP 2: CFOs de indústria média…"></textarea>
           </label>
           <label>
             Oferta / proposta de valor
-            <span class="hint">O que é oferecido na prospecção e qual o CTA.</span>
+            <span class="hint">O que é oferecido na prospecção e qual o CTA (se variar por ICP/estratégia, indique).</span>
             <textarea name="offer" rows="3" placeholder="Ex.: diagnóstico gratuito, reunião de 30min…"></textarea>
+          </label>
+          <label>
+            Estratégias em uso
+            <span class="hint">Uma por linha ou bloco: nome da estratégia, canal, ICP alvo, LP usada e a lógica da sequência. As métricas detalhadas abaixo referenciam esses nomes.</span>
+            <textarea name="strategies" rows="4" placeholder="Estratégia X: cold email 4 toques → ICP 1 → LP diagnóstico…&#10;Estratégia Y: email + wpp pós-resposta → ICP 2 → LP case…"></textarea>
           </label>
         </fieldset>
 
@@ -83,40 +121,52 @@
           <label>
             Sequência(s) de email — cole o copy real
             <span class="hint">Cole os emails da sequência, na ordem. Inclua os assuntos.</span>
-            <textarea name="emailSeq" rows="8" placeholder="Assunto: …&#10;Email 1: …&#10;&#10;Assunto: …&#10;Email 2 (follow-up): …"></textarea>
+            <textarea name="emailSeq" rows="7" placeholder="Assunto: …&#10;Email 1: …&#10;&#10;Assunto: …&#10;Email 2 (follow-up): …"></textarea>
           </label>
           <label>
-            Ou importe uma planilha com emails enviados (.xlsx / .csv)
-            <span class="hint">Cada linha = um email. Vale email inteiro numa coluna só, ou partes/parágrafos em colunas separadas (assunto, abertura, corpo…). Pode usar junto com o campo acima.</span>
-            <input type="file" id="sheet-file" accept=".xlsx,.csv" />
+            Ou importe planilha de emails enviados (.xlsx / .csv)
+            <span class="hint">Cada linha = um email. Vale email inteiro numa coluna, ou partes/parágrafos em colunas separadas.</span>
+            <input type="file" id="sheet-emails" accept=".xlsx,.csv" />
           </label>
-          <div id="sheet-status" class="sheet-status hidden">
-            <span id="sheet-info"></span>
-            <button type="button" id="sheet-remove" class="ghost small">✕ remover</button>
+          <div id="sheet-emails-status" class="sheet-status hidden">
+            <span id="sheet-emails-info"></span>
+            <button type="button" id="sheet-emails-remove" class="ghost small">✕ remover</button>
           </div>
+
           <label>
             Mensagens / sequência de WhatsApp
             <textarea name="waSeq" rows="4" placeholder="Cole as mensagens de WhatsApp usadas…"></textarea>
           </label>
           <label>
-            Landing page — URL
-            <span class="hint">Informe a URL e clique em Buscar: o conteúdo é extraído automaticamente para o campo abaixo (editável).</span>
-            <div class="lp-row">
-              <input name="lpUrl" id="lp-url" type="text" placeholder="https://…" />
-              <button type="button" id="lp-fetch-btn" class="ghost">Buscar</button>
-            </div>
-            <span id="lp-status" class="hint lp-status"></span>
+            Ou importe planilha de mensagens de WhatsApp (.xlsx / .csv)
+            <input type="file" id="sheet-whatsapp" accept=".xlsx,.csv" />
           </label>
-          <label>
-            LP — conteúdo / texto / HTML
-            <span class="hint">Preenchido pelo botão Buscar, ou cole manualmente (headline, seções, CTA).</span>
-            <textarea name="lpContent" rows="5" placeholder="Headline, subtítulo, provas, CTA…"></textarea>
+          <div id="sheet-whatsapp-status" class="sheet-status hidden">
+            <span id="sheet-whatsapp-info"></span>
+            <button type="button" id="sheet-whatsapp-remove" class="ghost small">✕ remover</button>
+          </div>
+
+          <label class="block-label">
+            Landing pages
+            <span class="hint">O cliente pode ter várias — uma por ICP/estratégia. Identifique cada uma e use o Buscar para extrair o conteúdo pela URL.</span>
           </label>
-          <label>
-            Amostra de leads
+          <div id="lp-list"></div>
+          <button type="button" id="lp-add" class="ghost small">+ Adicionar LP</button>
+
+          <label class="mt">
+            Amostra de leads (colar manualmente)
             <span class="hint">Cole alguns leads (cargo, empresa, porte, setor). Anonimize se preciso.</span>
             <textarea name="leads" rows="4" placeholder="Ex.: João — Diretor Comercial — Indústria X — 200 func.…"></textarea>
           </label>
+          <label>
+            Ou importe planilha de leads (.xlsx / .csv)
+            <span class="hint">Cada linha = um lead; as colunas (cargo, empresa, porte…) são lidas automaticamente.</span>
+            <input type="file" id="sheet-leads" accept=".xlsx,.csv" />
+          </label>
+          <div id="sheet-leads-status" class="sheet-status hidden">
+            <span id="sheet-leads-info"></span>
+            <button type="button" id="sheet-leads-remove" class="ghost small">✕ remover</button>
+          </div>
         </fieldset>
 
         <fieldset>
@@ -138,6 +188,8 @@
             Período de referência dos números
             <input name="q_period" type="text" placeholder="Ex.: últimos 90 dias" />
           </label>
+
+          <p class="sub-title">Totais gerais — email</p>
           <div class="grid-metrics">
             <label>Enviados<input name="q_sent" type="text" inputmode="numeric" placeholder="0" /></label>
             <label>Entregues<input name="q_delivered" type="text" inputmode="numeric" placeholder="0" /></label>
@@ -148,23 +200,49 @@
             <label>Taxa de bounce<input name="q_bounce" type="text" placeholder="Ex.: 4%" /></label>
             <label>Reclamação de spam<input name="q_spam" type="text" placeholder="Ex.: 0,2%" /></label>
           </div>
-          <label>
+
+          <p class="sub-title">Totais gerais — WhatsApp</p>
+          <div class="grid-metrics">
+            <label>Enviadas<input name="wa_sent" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Entregues<input name="wa_delivered" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Lidas<input name="wa_read" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Respondidas<input name="wa_replied" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Respostas positivas<input name="wa_positive" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Reuniões agendadas<input name="wa_meetings" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Bloqueios / denúncias<input name="wa_blocks" type="text" inputmode="numeric" placeholder="0" /></label>
+            <label>Números banidos<input name="wa_banned" type="text" inputmode="numeric" placeholder="0" /></label>
+          </div>
+
+          <p class="sub-title">Detalhado por estratégia e disparo <span class="hint-inline">— ex.: Estratégia X / disparo 1, 2, 3…; Estratégia Y / disparo 1…</span></p>
+          <div class="rows-scroll">
+            <table class="rows-table">
+              <thead>
+                <tr>
+                  <th>Estratégia</th><th>Disparo</th><th>Canal</th><th>Enviados</th><th>Entregues</th><th>Abertos/Lidas</th><th>Respostas</th><th>Positivas</th><th>Reuniões</th><th>Obs.</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="rows-body"></tbody>
+            </table>
+          </div>
+          <button type="button" id="row-add" class="ghost small">+ Adicionar disparo</button>
+
+          <label class="mt">
             Outras métricas / números (texto livre)
             <textarea name="metricsNotes" rows="3" placeholder="Cliques, oportunidades, ticket, ROI, o que mais tiver…"></textarea>
           </label>
         </fieldset>
 
         <fieldset>
-          <legend>5 · Infra & entregabilidade <span class="quant">quantitativo</span></legend>
+          <legend>5 · Infra &amp; entregabilidade <span class="quant">quantitativo</span></legend>
           <label>
             Infraestrutura de envio
-            <span class="hint">Domínios usados, SPF/DKIM/DMARC, warmup, ferramenta de disparo, volume/dia por caixa.</span>
-            <textarea name="infra" rows="4" placeholder="Ex.: enviamos pelo domínio principal via RD Station, ~300/dia, sem warmup…"></textarea>
+            <span class="hint">Domínios usados, SPF/DKIM/DMARC, warmup, ferramenta de disparo, volume/dia por caixa. Para WhatsApp: API oficial ou chip?</span>
+            <textarea name="infra" rows="4" placeholder="Ex.: enviamos pelo domínio principal via RD Station, ~300/dia, sem warmup; wpp via chip comum…"></textarea>
           </label>
         </fieldset>
 
         <fieldset>
-          <legend>6 · Histórico e panorama</legend>
+          <legend>6 · Histórico e observações</legend>
           <label>
             Histórico de campanhas — o que já tentou e resultados
             <textarea name="history" rows="4" placeholder="O que já foi testado, o que mudou, o que aconteceu…"></textarea>
@@ -173,16 +251,6 @@
             Observações adicionais
             <textarea name="notes" rows="2" placeholder="Qualquer contexto extra relevante…"></textarea>
           </label>
-          <div class="grid-2">
-            <label>
-              Total de clientes na operação
-              <input name="q_clientsTotal" type="text" inputmode="numeric" placeholder="Ex.: 40" />
-            </label>
-            <label>
-              Clientes com a estratégia funcionando
-              <input name="q_clientsWorking" type="text" inputmode="numeric" placeholder="Ex.: 0" />
-            </label>
-          </div>
         </fieldset>
 
         <div class="actions">
@@ -200,8 +268,9 @@
           <div class="result-tools hidden" id="result-tools">
             <button type="button" id="copy-btn" class="ghost small">Copiar</button>
             <button type="button" id="download-btn" class="ghost small">Baixar .md</button>
+            <button type="button" id="prompt-opt-btn" class="ghost small" title="Reescreve o prompt de geração de conteúdo 1:1 alinhado à estratégia acordada nesta conversa">Otimizar prompt 1:1</button>
             <button type="button" id="client-version-btn" class="ghost small" title="Gera a versão de apresentação para o cliente final — faça isso depois de aprovar as adaptações na conversa">Versão p/ cliente</button>
-            <button type="button" id="pdf-btn" class="ghost small" title="Abre a última resposta num layout de documento pronto para salvar como PDF">PDF</button>
+            <button type="button" id="pdf-btn" class="ghost small" title="Abre a última resposta num layout de documento pronto para salvar como PDF (cada resposta também tem seu próprio botão PDF)">PDF</button>
           </div>
         </div>
 
@@ -213,6 +282,7 @@
               oferta → copy → landing page → medição</strong>) e prioriza por
               impacto. Depois, você conversa com ele para adaptar à sua
               infraestrutura, reescrever campanhas e montar sequências novas.
+              Cada resposta pode virar PDF individualmente.
             </p>
           </div>
         </div>
@@ -221,7 +291,7 @@
           <textarea
             id="chat-input"
             rows="2"
-            placeholder="Converse para adaptar: 'reescreva o email 2 mais curto', 'adapte à minha infra: 1 domínio só, envio pelo Gmail', 'monte uma sequência nova de 4 toques para esse ICP'…"
+            placeholder="Converse para adaptar: 'reescreva o email 2 mais curto', 'adapte à minha infra: 1 domínio só', 'otimize o prompt da estratégia X'…"
           ></textarea>
           <button type="submit" id="chat-send" class="primary">Enviar</button>
         </form>

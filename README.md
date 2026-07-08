@@ -22,6 +22,22 @@ Ele diferencia o que **vê** (✅ confirmado) do que **supõe** (⚠️ prováve
 
 O botão **Copiar / Baixar .md** exporta a conversa inteira (auditoria + iterações).
 
+**Clientes salvos e histórico:** a barra no topo do formulário salva o brief de cada cliente (recarregue com um clique) e guarda **todas as auditorias com data** em `data/` (fora do git). Reabra qualquer auditoria e continue a conversa de onde parou, compare a evolução do cliente entre as duas auditorias mais recentes (**Comparar evolução**) e faça backup/restauração de tudo em um JSON (⬇/⬆).
+
+**Análise da operação:** o botão no topo cruza a auditoria mais recente de **todos** os clientes salvos e responde à pergunta central: *qual é a falha comum da operação?* — com padrões quantificados ("X de N clientes"), correções em nível de operação e plano de 30 dias.
+
+**Modelo e esforço na tela:** selecione Fable 5 / Opus 4.8 / Sonnet 5 e o nível de esforço por análise, sem mexer no `.env`.
+
+**Métricas por estratégia e disparo:** além dos totais (email **e WhatsApp** — incluindo bloqueios e números banidos), uma tabela dinâmica registra cada disparo de cada estratégia (Estratégia X · disparo 1, 2, 3…; Estratégia Y · …), e o avaliador compara onde cada sequência perde força.
+
+**Múltiplos ICPs, LPs e estratégias:** o cliente pode ter várias landing pages (cada uma com busca por URL), vários ICPs e várias estratégias — o avaliador audita o *pareamento* (a estratégia certa manda o ICP certo para a LP certa?).
+
+**Planilhas em três lugares:** emails enviados, mensagens de WhatsApp e amostra de leads podem ser importados de .xlsx/.csv.
+
+**Otimizador de prompt 1:1 (melhoria contínua):** o botão "Otimizar prompt 1:1" reescreve o prompt de geração alinhado à estratégia acordada na conversa, com diff explicado e roteiro de teste A/B para a próxima iteração.
+
+**PDF por resposta:** cada resposta do avaliador tem seu próprio botão "PDF desta resposta" — exporte só o trecho aprovado da conversa, não a conversa inteira.
+
 **Auditoria completa ou por etapa:** no topo do formulário, o bloco **Escopo da auditoria** deixa você marcar o que o avaliador deve analisar (emails, WhatsApp, LP, prompt 1:1, lista, oferta, métricas/infra). Tudo marcado = fluxo completo do cliente; desmarque para validar só etapas. Mesmo com escopo restrito, se os dados mostrarem problema crítico numa camada acima do funil, o relatório inclui um alerta curto.
 
 **Planilha de emails enviados:** além de colar a sequência, você pode importar um **.xlsx ou .csv** com exemplos reais de emails — cada linha é um email, e vale tanto o email inteiro numa coluna quanto partes/parágrafos em colunas separadas (assunto, abertura, corpo, CTA…). O conteúdo entra na auditoria como evidência de copy.

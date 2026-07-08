@@ -82,6 +82,74 @@ body {
   color: var(--danger);
   font-weight: 600;
 }
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ctl {
+  display: flex;
+  flex-direction: column;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  gap: 2px;
+}
+.ctl select {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 5px 8px;
+}
+
+/* barra de cliente/histórico */
+.client-bar {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  background: var(--bg);
+}
+.client-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.client-row:last-of-type {
+  margin-bottom: 0;
+}
+.client-row select {
+  flex: 1;
+  min-width: 160px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 8px;
+}
+.client-row .spacer {
+  flex: 1;
+}
+.client-status {
+  display: block;
+  min-height: 1em;
+  margin-top: 4px;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
 
 /* ---------- Layout ---------- */
 .layout {
@@ -218,7 +286,24 @@ input[type="file"] {
   color: var(--muted);
 }
 
-/* linha URL da LP + botão Buscar */
+/* blocos de LP (múltiplas) */
+.lp-block {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: var(--bg);
+}
+.lp-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.lp-head .lp-name {
+  flex: 1;
+  margin-top: 0;
+}
 .lp-row {
   display: flex;
   gap: 8px;
@@ -235,8 +320,89 @@ input[type="file"] {
 }
 .lp-status {
   display: block;
-  margin-top: 4px;
+  margin: 4px 0;
   min-height: 1em;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+}
+.lp-block textarea {
+  margin-top: 2px;
+}
+.block-label {
+  margin-bottom: 6px !important;
+}
+.mt {
+  margin-top: 12px !important;
+}
+
+/* tabela de métricas por estratégia/disparo */
+.sub-title {
+  font-size: 13px;
+  font-weight: 650;
+  margin: 14px 0 6px;
+}
+.hint-inline {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.rows-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.rows-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 920px;
+  font-size: 12px;
+}
+.rows-table th {
+  background: var(--bg);
+  font-weight: 650;
+  text-align: left;
+  padding: 6px 6px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.rows-table td {
+  padding: 3px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.rows-table input,
+.rows-table select {
+  width: 100%;
+  min-width: 64px;
+  margin: 0;
+  padding: 6px 7px;
+  font-size: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+}
+.rows-table .r-strategy {
+  min-width: 130px;
+}
+.rows-table .r-dispatch {
+  min-width: 48px;
+  max-width: 64px;
+}
+.rows-table .r-notes {
+  min-width: 110px;
+}
+
+/* ações por resposta do assistente */
+.msg-tools {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.tiny {
+  padding: 3px 9px;
+  font-size: 11px;
 }
 
 label {

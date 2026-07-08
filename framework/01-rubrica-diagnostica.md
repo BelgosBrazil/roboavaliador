@@ -52,6 +52,7 @@ A agência produz conteúdo "ultra personalizado" por lead usando IA. Nesse caso
 
 ## 5. Landing page & conversão
 - **Match mensagem → LP:** a promessa do email/WhatsApp é a MESMA da headline da LP? Quebra de continuidade derruba conversão.
+- **Múltiplas LPs / ICPs / estratégias:** quando o cliente tiver mais de uma LP, avalie **cada uma** e — crítico — o **pareamento**: cada estratégia manda o ICP certo para a LP certa? Sequência do ICP A apontando para a LP do ICP B é vazamento clássico. Se o brief não deixar claro qual estratégia usa qual LP, aponte isso como lacuna.
 - **Clareza em 5 segundos:** dá pra entender o que é, pra quem, e qual o próximo passo?
 - **CTA único:** agendamento sem fricção (poucos campos, calendário embutido) ou formulário longo/genérico?
 - **Prova social BR:** logos, depoimentos, números — de empresas que o lead reconhece?
@@ -60,6 +61,8 @@ A agência produz conteúdo "ultra personalizado" por lead usando IA. Nesse caso
 
 ## 6. Medição & aprendizado — o assassino silencioso nº 2
 - Vocês medem **por etapa**? Enviados → entregues → abertos (pouco confiável) → respondidos → respostas positivas → reuniões → oportunidades?
+- **Por estratégia e por disparo:** quando o brief trouxer métricas detalhadas por estratégia/disparo, compare-as — onde cada sequência perde força (disparo 1 vs. follow-ups)? Qual estratégia performa melhor e por quê? Um disparo com queda anormal indica problema pontual (assunto, ângulo, segmento); queda uniforme em tudo indica problema sistêmico (infra, lista).
+- **Métricas de WhatsApp:** as que importam são **entregues → lidas → respondidas → respostas positivas → reuniões**, mais os sinais de risco: **bloqueios/denúncias e números banidos** (qualquer banimento = alerta vermelho de canal frio/abuso — trate na camada 1/risco, não como "métrica ruim").
 - **Métricas certas:** a frio, o que importa é **taxa de resposta positiva** e **reuniões agendadas** — não taxa de abertura (Apple MPP inflou tudo) nem cliques.
 - **Volume de teste:** rodou volume suficiente pra concluir algo, ou está tirando conclusão de 50 envios?
 - **Ciclo de iteração:** existe processo de testar 1 variável por vez, ou muda tudo ao mesmo tempo e não sabe o que causou o quê?

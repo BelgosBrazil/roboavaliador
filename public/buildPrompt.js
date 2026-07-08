@@ -7,7 +7,7 @@ export function buildSystemPrompt(frameworkText) {
 
 ---
 
-A PRIMEIRA mensagem do usuário traz os dados de UM cliente da agência Belgos, separados em blocos qualitativos e quantitativos. Produza o relatório de auditoria seguindo EXATAMENTE o formato definido acima, começando pelo "Veredito em 30 segundos", sem preâmbulo.
+A PRIMEIRA mensagem do usuário traz os dados de UM cliente da agência Belgos (ou um pedido de análise especial, conforme o método). Para auditoria de cliente, produza o relatório seguindo EXATAMENTE o formato definido acima, começando pelo "Veredito em 30 segundos", sem preâmbulo.
 
 As mensagens SEGUINTES são uma conversa de iteração: o dono da operação vai pedir para você adaptar, reescrever e produzir campanhas conforme a infraestrutura e as restrições reais dele. A partir do segundo turno, comporte-se conforme a seção "Modo conversa": entregue artefatos completos, adapte às restrições e mantenha a disciplina do funil. Responda sempre em português do Brasil, em Markdown.`;
 }
@@ -21,7 +21,7 @@ function field(label, value) {
   return `### ${label}\n${v || "_(não fornecido)_"}\n`;
 }
 
-// Métrica quantitativa por etapa: mostra o número ou "—" quando ausente.
+// Métrica quantitativa: mostra o número ou "—" quando ausente.
 function metricRow(label, value) {
   const v = clean(value);
   return `- **${label}:** ${v || "—"}`;
@@ -37,8 +37,73 @@ const SCOPE_LABELS = {
   metricas: "Métricas & infraestrutura",
 };
 
+// ---------- blocos compostos ----------
+
+function lpsBlock(lps) {
+  const list = (Array.isArray(lps) ? lps : []).filter(
+    (lp) => clean(lp?.name) || clean(lp?.url) || clean(lp?.content),
+  );
+  if (list.length === 0) {
+    return `### Landing pages\n_(nenhuma fornecida)_\n`;
+  }
+  const parts = [`### Landing pages (${list.length})\n`];
+  list.forEach((lp, i) => {
+    parts.push(
+      [
+        `**LP ${i + 1}: ${clean(lp.name) || "(sem identificador)"}**`,
+        `- URL: ${clean(lp.url) || "—"}`,
+        `- Conteúdo:`,
+        clean(lp.content) || "_(conteúdo não fornecido)_",
+        ``,
+      ].join("\n"),
+    );
+  });
+  return parts.join("\n");
+}
+
+const CHANNEL_LABELS = { email: "email", whatsapp: "WhatsApp" };
+
+function dispatchRowsBlock(rows) {
+  const list = (Array.isArray(rows) ? rows : []).filter((r) =>
+    Object.values(r || {}).some((v) => clean(v)),
+  );
+  if (list.length === 0) return "";
+
+  // agrupa por estratégia, preservando a ordem de entrada
+  const groups = new Map();
+  for (const r of list) {
+    const key = clean(r.strategy) || "(estratégia não informada)";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  }
+
+  const parts = [`### Métricas detalhadas por estratégia e disparo\n`];
+  for (const [strategy, group] of groups) {
+    parts.push(`**Estratégia: ${strategy}**`);
+    for (const r of group) {
+      const canal = CHANNEL_LABELS[clean(r.channel)] || clean(r.channel) || "—";
+      const cells = [
+        `enviados ${clean(r.sent) || "—"}`,
+        `entregues ${clean(r.delivered) || "—"}`,
+        `abertos/lidas ${clean(r.opened) || "—"}`,
+        `respostas ${clean(r.replied) || "—"}`,
+        `positivas ${clean(r.positive) || "—"}`,
+        `reuniões ${clean(r.meetings) || "—"}`,
+      ].join(" | ");
+      const obs = clean(r.notes) ? ` | obs: ${clean(r.notes)}` : "";
+      parts.push(
+        `- Disparo ${clean(r.dispatch) || "?"} (${canal}): ${cells}${obs}`,
+      );
+    }
+    parts.push("");
+  }
+  return parts.join("\n");
+}
+
+// ---------- brief principal ----------
+
 export function buildUserPrompt(intake = {}) {
-  const stepKeys = [
+  const emailTotalsKeys = [
     "q_sent",
     "q_delivered",
     "q_opened",
@@ -48,8 +113,24 @@ export function buildUserPrompt(intake = {}) {
     "q_bounce",
     "q_spam",
   ];
+  const waTotalsKeys = [
+    "wa_sent",
+    "wa_delivered",
+    "wa_read",
+    "wa_replied",
+    "wa_positive",
+    "wa_meetings",
+    "wa_blocks",
+    "wa_banned",
+  ];
+  const dispatchRows = Array.isArray(intake.dispatchRows)
+    ? intake.dispatchRows
+    : [];
   const hasStepMetrics =
-    stepKeys.some((k) => clean(intake[k])) || clean(intake.metricsNotes);
+    emailTotalsKeys.some((k) => clean(intake[k])) ||
+    waTotalsKeys.some((k) => clean(intake[k])) ||
+    dispatchRows.some((r) => Object.values(r || {}).some((v) => clean(v))) ||
+    clean(intake.metricsNotes);
   const hasInfra = Boolean(clean(intake.infra));
 
   const lacunas = [];
@@ -61,7 +142,7 @@ export function buildUserPrompt(intake = {}) {
       ? `> **Observação do sistema:** o usuário NÃO forneceu dados de: ${lacunas.join(
           " e ",
         )}. Trate essas lacunas como achado prioritário, conforme o método.\n`
-      : `> **Observação do sistema:** o usuário forneceu métricas por etapa e dados de infraestrutura. Aproveite os números.\n`;
+      : `> **Observação do sistema:** o usuário forneceu métricas e dados de infraestrutura. Aproveite os números.\n`;
 
   const partes = [];
 
@@ -90,8 +171,19 @@ export function buildUserPrompt(intake = {}) {
   partes.push(`## Dados qualitativos\n`);
   partes.push(field("Setor / indústria do cliente", intake.sector));
   partes.push(field("CPC — Conhecimento Profundo do Cliente", intake.cpc));
-  partes.push(field("ICP — Perfil de Cliente Ideal", intake.icp));
+  partes.push(
+    field(
+      "ICP(s) — Perfil(is) de Cliente Ideal (pode haver mais de um)",
+      intake.icp,
+    ),
+  );
   partes.push(field("Oferta / proposta de valor", intake.offer));
+  partes.push(
+    field(
+      "Estratégias em uso (nome, canal, ICP alvo, LP usada, lógica da sequência)",
+      intake.strategies,
+    ),
+  );
   partes.push(field("Sequência(s) de email (copy real)", intake.emailSeq));
   partes.push(
     field(
@@ -101,6 +193,12 @@ export function buildUserPrompt(intake = {}) {
   );
   partes.push(
     field("Mensagens / sequência de WhatsApp (copy real)", intake.waSeq),
+  );
+  partes.push(
+    field(
+      "Exemplos de mensagens de WhatsApp enviadas (importados de planilha)",
+      intake.waSheet,
+    ),
   );
   partes.push(
     field(
@@ -114,9 +212,14 @@ export function buildUserPrompt(intake = {}) {
       intake.genPrompt,
     ),
   );
-  partes.push(field("Landing page — URL", intake.lpUrl));
-  partes.push(field("Landing page — conteúdo / HTML / texto", intake.lpContent));
-  partes.push(field("Amostra de leads", intake.leads));
+  partes.push(lpsBlock(intake.lps));
+  partes.push(field("Amostra de leads (colada manualmente)", intake.leads));
+  partes.push(
+    field(
+      "Amostra de leads (importada de planilha — cada registro é um lead)",
+      intake.leadsSheet,
+    ),
+  );
   partes.push(
     field(
       "Histórico de campanhas — o que já foi feito e resultados",
@@ -129,7 +232,7 @@ export function buildUserPrompt(intake = {}) {
   partes.push(`## Dados quantitativos\n`);
   partes.push(field("Período de referência dos números", intake.q_period));
 
-  const funil = [
+  const funilEmail = [
     metricRow("Enviados", intake.q_sent),
     metricRow("Entregues", intake.q_delivered),
     metricRow("Abertos", intake.q_opened),
@@ -139,7 +242,22 @@ export function buildUserPrompt(intake = {}) {
     metricRow("Taxa de bounce", intake.q_bounce),
     metricRow("Taxa de reclamação de spam", intake.q_spam),
   ].join("\n");
-  partes.push(`### Funil por etapa\n${funil}\n`);
+  partes.push(`### Totais gerais — email\n${funilEmail}\n`);
+
+  const funilWa = [
+    metricRow("Enviadas", intake.wa_sent),
+    metricRow("Entregues", intake.wa_delivered),
+    metricRow("Lidas", intake.wa_read),
+    metricRow("Respondidas", intake.wa_replied),
+    metricRow("Respostas positivas", intake.wa_positive),
+    metricRow("Reuniões agendadas", intake.wa_meetings),
+    metricRow("Bloqueios / denúncias", intake.wa_blocks),
+    metricRow("Números banidos", intake.wa_banned),
+  ].join("\n");
+  partes.push(`### Totais gerais — WhatsApp\n${funilWa}\n`);
+
+  const detalhado = dispatchRowsBlock(dispatchRows);
+  if (detalhado) partes.push(detalhado);
 
   partes.push(
     field("Outras métricas / números (texto livre)", intake.metricsNotes),
@@ -150,17 +268,6 @@ export function buildUserPrompt(intake = {}) {
       intake.infra,
     ),
   );
-
-  // Panorama da operação (contexto agregado dos clientes)
-  if (clean(intake.q_clientsTotal) || clean(intake.q_clientsWorking)) {
-    partes.push(`## Panorama da operação\n`);
-    partes.push(
-      `${metricRow("Total de clientes na operação", intake.q_clientsTotal)}\n${metricRow(
-        "Clientes com a estratégia funcionando",
-        intake.q_clientsWorking,
-      )}\n`,
-    );
-  }
 
   return partes.join("\n");
 }
