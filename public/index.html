@@ -98,17 +98,20 @@
             Mensagens / sequência de WhatsApp
             <textarea name="waSeq" rows="4" placeholder="Cole as mensagens de WhatsApp usadas…"></textarea>
           </label>
-          <div class="grid-2">
-            <label>
-              Landing page — URL
-              <input name="lpUrl" type="text" placeholder="https://…" />
-            </label>
-            <label>
-              LP — conteúdo / texto / HTML
-              <span class="hint">Cole o texto da página (headline, seções, CTA) ou o HTML.</span>
-              <textarea name="lpContent" rows="4" placeholder="Headline, subtítulo, provas, CTA…"></textarea>
-            </label>
-          </div>
+          <label>
+            Landing page — URL
+            <span class="hint">Informe a URL e clique em Buscar: o conteúdo é extraído automaticamente para o campo abaixo (editável).</span>
+            <div class="lp-row">
+              <input name="lpUrl" id="lp-url" type="text" placeholder="https://…" />
+              <button type="button" id="lp-fetch-btn" class="ghost">Buscar</button>
+            </div>
+            <span id="lp-status" class="hint lp-status"></span>
+          </label>
+          <label>
+            LP — conteúdo / texto / HTML
+            <span class="hint">Preenchido pelo botão Buscar, ou cole manualmente (headline, seções, CTA).</span>
+            <textarea name="lpContent" rows="5" placeholder="Headline, subtítulo, provas, CTA…"></textarea>
+          </label>
           <label>
             Amostra de leads
             <span class="hint">Cole alguns leads (cargo, empresa, porte, setor). Anonimize se preciso.</span>
@@ -197,6 +200,8 @@
           <div class="result-tools hidden" id="result-tools">
             <button type="button" id="copy-btn" class="ghost small">Copiar</button>
             <button type="button" id="download-btn" class="ghost small">Baixar .md</button>
+            <button type="button" id="client-version-btn" class="ghost small" title="Gera a versão de apresentação para o cliente final — faça isso depois de aprovar as adaptações na conversa">Versão p/ cliente</button>
+            <button type="button" id="pdf-btn" class="ghost small" title="Abre a última resposta num layout de documento pronto para salvar como PDF">PDF</button>
           </div>
         </div>
 

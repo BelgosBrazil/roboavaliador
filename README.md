@@ -26,6 +26,10 @@ O botão **Copiar / Baixar .md** exporta a conversa inteira (auditoria + iteraç
 
 **Planilha de emails enviados:** além de colar a sequência, você pode importar um **.xlsx ou .csv** com exemplos reais de emails — cada linha é um email, e vale tanto o email inteiro numa coluna quanto partes/parágrafos em colunas separadas (assunto, abertura, corpo, CTA…). O conteúdo entra na auditoria como evidência de copy.
 
+**Landing page pela URL:** informe a URL da LP e clique em **Buscar** — o servidor acessa a página e extrai título, meta description, headings, CTAs, formulários (campos e botão) e o texto, direto para o campo da auditoria (editável antes de enviar).
+
+**PDF para apresentar ao cliente:** depois de aprovar as adaptações na conversa, clique em **Versão p/ cliente** — o avaliador gera o documento de apresentação (resumo executivo, diagnóstico em linguagem de gestor, plano de ação com responsáveis e prazos), sem jargão interno e sem expor a operação da agência. Ajuste o que quiser pelo chat e clique em **PDF**: abre um layout de documento timbrado (A4) pronto para "Salvar como PDF" — ideal para o CS levar à reunião.
+
 **Conteúdo 1:1 gerado por IA?** O formulário tem um bloco para colar o **modelo e o prompt** que você usa para gerar o conteúdo ultra personalizado de cada lead. O avaliador audita o *sistema de geração* (insumos reais vs. personalização inventada, CPC/ICP embutidos, restrições de formato, "cheiro de IA") e, quando necessário, **reescreve o prompt inteiro** — a correção de maior alavancagem, porque conserta o conteúdo de todos os leads de uma vez.
 
 ## Como rodar

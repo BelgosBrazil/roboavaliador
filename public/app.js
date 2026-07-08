@@ -22,6 +22,11 @@ const sheetFile = document.getElementById("sheet-file");
 const sheetStatus = document.getElementById("sheet-status");
 const sheetInfo = document.getElementById("sheet-info");
 const sheetRemove = document.getElementById("sheet-remove");
+const lpUrlInput = document.getElementById("lp-url");
+const lpFetchBtn = document.getElementById("lp-fetch-btn");
+const lpStatus = document.getElementById("lp-status");
+const clientVersionBtn = document.getElementById("client-version-btn");
+const pdfBtn = document.getElementById("pdf-btn");
 
 const FUNNEL_STEPS = [
   "Infraestrutura & entregabilidade",
@@ -78,6 +83,57 @@ sheetRemove.addEventListener("click", () => {
   sheet = null;
   sheetFile.value = "";
   sheetStatus.classList.add("hidden");
+});
+
+// ---------- buscar LP pela URL ----------
+lpFetchBtn.addEventListener("click", async () => {
+  const url = lpUrlInput.value.trim();
+  if (!url) {
+    lpStatus.textContent = "Informe a URL primeiro.";
+    return;
+  }
+  lpFetchBtn.disabled = true;
+  lpStatus.textContent = "Buscando a página…";
+  try {
+    const resp = await fetch("/api/fetch-lp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    const result = await resp.json();
+    if (!resp.ok) throw new Error(result.error || `Erro ${resp.status}`);
+    form.elements.lpContent.value = result.text;
+    lpStatus.textContent = `✓ Conteúdo extraído de ${result.finalUrl} — revise/edite no campo abaixo.`;
+  } catch (err) {
+    lpStatus.textContent = `⚠️ ${err.message}`;
+  } finally {
+    lpFetchBtn.disabled = false;
+  }
+});
+
+// ---------- versão para o cliente + PDF ----------
+clientVersionBtn.addEventListener("click", () => {
+  if (busy || messages.length === 0) return;
+  runTurn(
+    "Gere agora a **versão para o cliente** desta auditoria, seguindo exatamente a seção \"Documento para o cliente\" do método. Considere tudo que combinamos nesta conversa (incluindo as adaptações), e não inclua nada que tenha sido descartado.",
+    { type: "bubble", text: "Gerar a versão de apresentação para o cliente" },
+    false,
+  );
+});
+
+pdfBtn.addEventListener("click", () => {
+  const last = [...messages].reverse().find((m) => m.role === "assistant");
+  if (!last) return;
+  const clientName = form.elements.clientName?.value?.trim() || "Cliente";
+  const win = window.open("", "_blank");
+  if (!win) {
+    alert("O navegador bloqueou a janela. Permita pop-ups para gerar o PDF.");
+    return;
+  }
+  win.document.write(buildPrintHtml(last.content, { clientName }));
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 400);
 });
 
 // ---------- turno 1: auditoria ----------
@@ -453,4 +509,102 @@ function renderMarkdown(md) {
   }
   flushPara();
   return out.join("\n");
+}
+
+// ---------- documento para impressão / PDF ----------
+function buildPrintHtml(markdown, { clientName = "Cliente" } = {}) {
+  const date = new Date().toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  const body = renderMarkdown(markdown)
+    // realça as palavras de situação do documento para o cliente
+    .replace(/<strong>Situação:<\/strong>\s*<code>?Crítico<\/code>?/g, '<strong>Situação:</strong> <span class="sev sev-critico">Crítico</span>')
+    .replace(/<strong>Situação:<\/strong>\s*<code>?Atenção<\/code>?/g, '<strong>Situação:</strong> <span class="sev sev-atencao">Atenção</span>')
+    .replace(/<strong>Situação:<\/strong>\s*<code>?Adequado<\/code>?/g, '<strong>Situação:</strong> <span class="sev sev-adequado">Adequado</span>');
+
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Auditoria de Prospecção — ${esc(clientName)}</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm 22mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1c2733; font-size: 11.5pt; line-height: 1.55;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .band { height: 8px; background: linear-gradient(90deg, #1f6feb, #123a78); }
+  header.doc {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    padding: 22px 0 14px; border-bottom: 2px solid #1f6feb; margin-bottom: 8px;
+  }
+  .brand-name { font-size: 19pt; font-weight: 800; letter-spacing: -0.02em; color: #123a78; }
+  .brand-sub { font-size: 9pt; color: #5a6b7d; text-transform: uppercase; letter-spacing: 0.14em; margin-top: 2px; }
+  .doc-meta { text-align: right; font-size: 9.5pt; color: #5a6b7d; }
+  .doc-meta .client { font-size: 12pt; font-weight: 700; color: #1c2733; }
+  main { padding: 6px 2px 30px; }
+  h1 { font-size: 19pt; letter-spacing: -0.02em; color: #123a78; margin: 18px 0 4px; line-height: 1.25; }
+  h2 {
+    font-size: 13.5pt; color: #123a78; margin: 26px 0 8px; padding-bottom: 5px;
+    border-bottom: 1px solid #d8e2ee; break-after: avoid;
+  }
+  h3 { font-size: 11.5pt; margin: 16px 0 4px; break-after: avoid; }
+  p { margin: 7px 0; }
+  ul, ol { margin: 7px 0; padding-left: 20px; }
+  li { margin: 4px 0; }
+  strong { font-weight: 700; }
+  code { background: #f0f4f9; border-radius: 4px; padding: 1px 5px; font-size: 0.9em; }
+  pre { background: #f0f4f9; border-radius: 8px; padding: 12px; overflow-x: auto; break-inside: avoid; }
+  blockquote {
+    margin: 12px 0; padding: 9px 16px; border-left: 4px solid #1f6feb;
+    background: #f2f7ff; border-radius: 0 8px 8px 0; break-inside: avoid;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 10pt; break-inside: avoid; }
+  th, td { border: 1px solid #d8e2ee; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #eef3fa; color: #123a78; }
+  tr:nth-child(even) td { background: #fafcff; }
+  hr { border: 0; border-top: 1px solid #d8e2ee; margin: 20px 0; }
+  .sev { font-weight: 700; padding: 1px 10px; border-radius: 20px; font-size: 9.5pt; }
+  .sev-critico { background: #fdecea; color: #b3261e; }
+  .sev-atencao { background: #fef3df; color: #9a6a00; }
+  .sev-adequado { background: #e6f4ec; color: #196c43; }
+  footer.doc {
+    margin-top: 34px; padding-top: 10px; border-top: 1px solid #d8e2ee;
+    font-size: 8.5pt; color: #8494a5; display: flex; justify-content: space-between;
+  }
+  @media screen {
+    body { background: #e8ebef; }
+    .page { max-width: 210mm; margin: 24px auto; background: #fff; padding: 20mm 18mm; box-shadow: 0 4px 24px rgba(0,0,0,.15); }
+    .print-tip { max-width: 210mm; margin: 14px auto 0; text-align: center; color: #5a6b7d; font-size: 10pt; }
+  }
+  @media print { .page { max-width: none; margin: 0; padding: 0; } .print-tip { display: none; } }
+</style>
+</head>
+<body>
+<p class="print-tip">Na janela de impressão, escolha “Salvar como PDF”. (Ctrl/Cmd+P se ela não abrir sozinha.)</p>
+<div class="page">
+  <div class="band"></div>
+  <header class="doc">
+    <div>
+      <div class="brand-name">Belgos</div>
+      <div class="brand-sub">Inteligência em Prospecção</div>
+    </div>
+    <div class="doc-meta">
+      <div class="client">${esc(clientName)}</div>
+      <div>Auditoria de Prospecção · ${esc(date)}</div>
+    </div>
+  </header>
+  <main>${body}</main>
+  <footer class="doc">
+    <span>Documento confidencial — preparado pela Belgos para ${esc(clientName)}</span>
+    <span>${esc(date)}</span>
+  </footer>
+</div>
+</body>
+</html>`;
 }

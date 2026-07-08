@@ -7,6 +7,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import { buildSystemPrompt } from "./public/buildPrompt.js";
 import { parseSheetBuffer } from "./lib/parseSheet.js";
+import { fetchLandingPage } from "./lib/fetchLp.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -71,6 +72,16 @@ app.post("/api/parse-sheet", async (req, res) => {
     res.status(400).json({
       error: err?.message || "Não foi possível ler a planilha.",
     });
+  }
+});
+
+// Busca a landing page pela URL e devolve o conteúdo extraído para o brief.
+app.post("/api/fetch-lp", async (req, res) => {
+  try {
+    const result = await fetchLandingPage(req.body?.url);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err?.message || "Não foi possível buscar a página." });
   }
 });
 
