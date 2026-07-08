@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import Anthropic from "@anthropic-ai/sdk";
 
 import { buildSystemPrompt } from "./public/buildPrompt.js";
+import { parseSheetBuffer } from "./lib/parseSheet.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,7 +41,7 @@ function loadFramework() {
 const client = new Anthropic(); // usa ANTHROPIC_API_KEY do ambiente
 
 const app = express();
-app.use(express.json({ limit: "8mb" }));
+app.use(express.json({ limit: "25mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/api/health", (req, res) => {
@@ -51,6 +52,26 @@ app.get("/api/health", (req, res) => {
     fallback: IS_FABLE ? FALLBACK_MODEL : null,
     keyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
   });
+});
+
+// Converte planilha (.xlsx/.csv) com exemplos de emails em texto para o brief.
+app.post("/api/parse-sheet", async (req, res) => {
+  try {
+    const { filename, dataBase64 } = req.body || {};
+    if (!dataBase64) {
+      return res.status(400).json({ error: "Arquivo ausente." });
+    }
+    const buffer = Buffer.from(dataBase64, "base64");
+    if (buffer.length > 15 * 1024 * 1024) {
+      return res.status(413).json({ error: "Planilha grande demais (máx. 15MB)." });
+    }
+    const result = await parseSheetBuffer(filename, buffer);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({
+      error: err?.message || "Não foi possível ler a planilha.",
+    });
+  }
 });
 
 // Endpoint de conversa: recebe o histórico completo (o cliente é dono do

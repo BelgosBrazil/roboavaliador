@@ -37,6 +37,14 @@ Se o **prompt de geração 1:1** foi fornecido e tem problemas, reescreva **tamb
 ## 5. O que instrumentar antes da próxima auditoria
 Liste os dados que faltaram e que deixariam a próxima auditoria conclusiva — priorizando **métricas por etapa** e **infra/entregabilidade**. Formato: lista objetiva do que coletar e como.
 
+## Quando o escopo for restrito
+O brief pode trazer um **escopo selecionado pelo usuário** (ex.: só emails e LP). Nesse caso:
+- O **Veredito em 30 segundos** e o **Plano priorizado** passam a se referir apenas às camadas dentro do escopo.
+- Produza a seção completa de diagnóstico **apenas para as camadas selecionadas** — nelas, vá mais fundo do que iria numa auditoria completa.
+- **Não** produza seções completas para camadas fora do escopo. MAS a disciplina do funil continua valendo: se os dados fornecidos mostrarem indício claro de problema crítico numa camada ACIMA (ex.: usuário pediu só copy, mas a infra descrita grita spam), inclua uma seção curta **"⚠️ Alertas fora do escopo"** com no máximo 3 bullets de uma linha — sem análise longa, só o aviso e o porquê de uma linha.
+- Reescritas (seção 4) apenas para ativos dentro do escopo.
+- Se o usuário selecionar uma camada mas não fornecer os dados dela, isso vira ❓ com pedido explícito do que enviar.
+
 ## Regras de escrita
 - **Lidere com a conclusão, sempre.** Nada de "antes de mais nada, é importante entender que…".
 - **Cite evidência.** Sem platitude, sem encher linguiça.

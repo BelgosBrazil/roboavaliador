@@ -31,6 +31,24 @@
           leads), mais conclusivo o diagnóstico.
         </p>
 
+        <fieldset class="scope-box">
+          <legend>Escopo da auditoria</legend>
+          <p class="hint scope-hint">
+            Marque o que o avaliador deve analisar a fundo. Tudo marcado =
+            fluxo completo do cliente; desmarque para validar só etapas.
+            (Camadas acima quebradas ainda geram um alerta curto.)
+          </p>
+          <div class="scope-grid">
+            <label class="check"><input type="checkbox" name="scope" value="oferta" checked /> Oferta / ICP / CPC</label>
+            <label class="check"><input type="checkbox" name="scope" value="lista" checked /> Lista &amp; leads</label>
+            <label class="check"><input type="checkbox" name="scope" value="emails" checked /> Emails</label>
+            <label class="check"><input type="checkbox" name="scope" value="whatsapp" checked /> WhatsApp</label>
+            <label class="check"><input type="checkbox" name="scope" value="prompt1a1" checked /> Prompt de geração 1:1</label>
+            <label class="check"><input type="checkbox" name="scope" value="lp" checked /> Landing page</label>
+            <label class="check"><input type="checkbox" name="scope" value="metricas" checked /> Métricas &amp; infra</label>
+          </div>
+        </fieldset>
+
         <fieldset>
           <legend>1 · Contexto do cliente <span class="qual">qualitativo</span></legend>
           <div class="grid-2">
@@ -67,6 +85,15 @@
             <span class="hint">Cole os emails da sequência, na ordem. Inclua os assuntos.</span>
             <textarea name="emailSeq" rows="8" placeholder="Assunto: …&#10;Email 1: …&#10;&#10;Assunto: …&#10;Email 2 (follow-up): …"></textarea>
           </label>
+          <label>
+            Ou importe uma planilha com emails enviados (.xlsx / .csv)
+            <span class="hint">Cada linha = um email. Vale email inteiro numa coluna só, ou partes/parágrafos em colunas separadas (assunto, abertura, corpo…). Pode usar junto com o campo acima.</span>
+            <input type="file" id="sheet-file" accept=".xlsx,.csv" />
+          </label>
+          <div id="sheet-status" class="sheet-status hidden">
+            <span id="sheet-info"></span>
+            <button type="button" id="sheet-remove" class="ghost small">✕ remover</button>
+          </div>
           <label>
             Mensagens / sequência de WhatsApp
             <textarea name="waSeq" rows="4" placeholder="Cole as mensagens de WhatsApp usadas…"></textarea>

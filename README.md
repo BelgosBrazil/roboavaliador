@@ -22,6 +22,10 @@ Ele diferencia o que **vê** (✅ confirmado) do que **supõe** (⚠️ prováve
 
 O botão **Copiar / Baixar .md** exporta a conversa inteira (auditoria + iterações).
 
+**Auditoria completa ou por etapa:** no topo do formulário, o bloco **Escopo da auditoria** deixa você marcar o que o avaliador deve analisar (emails, WhatsApp, LP, prompt 1:1, lista, oferta, métricas/infra). Tudo marcado = fluxo completo do cliente; desmarque para validar só etapas. Mesmo com escopo restrito, se os dados mostrarem problema crítico numa camada acima do funil, o relatório inclui um alerta curto.
+
+**Planilha de emails enviados:** além de colar a sequência, você pode importar um **.xlsx ou .csv** com exemplos reais de emails — cada linha é um email, e vale tanto o email inteiro numa coluna quanto partes/parágrafos em colunas separadas (assunto, abertura, corpo, CTA…). O conteúdo entra na auditoria como evidência de copy.
+
 **Conteúdo 1:1 gerado por IA?** O formulário tem um bloco para colar o **modelo e o prompt** que você usa para gerar o conteúdo ultra personalizado de cada lead. O avaliador audita o *sistema de geração* (insumos reais vs. personalização inventada, CPC/ICP embutidos, restrições de formato, "cheiro de IA") e, quando necessário, **reescreve o prompt inteiro** — a correção de maior alavancagem, porque conserta o conteúdo de todos os leads de uma vez.
 
 ## Como rodar

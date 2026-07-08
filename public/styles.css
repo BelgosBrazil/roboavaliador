@@ -161,6 +161,63 @@ legend {
   background: color-mix(in srgb, var(--quant) 14%, transparent);
 }
 
+/* escopo da auditoria */
+.scope-box {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+.scope-hint {
+  margin: 0 0 10px;
+}
+.scope-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+.check {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 13px;
+  margin: 0 !important;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--panel);
+  cursor: pointer;
+  user-select: none;
+}
+.check:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+}
+.check input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+/* status da planilha importada */
+.sheet-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin-bottom: 12px;
+}
+input[type="file"] {
+  display: block;
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
 label {
   display: block;
   font-size: 13px;

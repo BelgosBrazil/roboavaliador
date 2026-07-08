@@ -16,6 +16,12 @@ const statusEl = document.getElementById("status");
 // ---------- estado ----------
 let messages = []; // histórico da conversa {role, content}
 let busy = false;
+let sheet = null; // { text, filename, rows, sheets } — planilha de emails importada
+
+const sheetFile = document.getElementById("sheet-file");
+const sheetStatus = document.getElementById("sheet-status");
+const sheetInfo = document.getElementById("sheet-info");
+const sheetRemove = document.getElementById("sheet-remove");
 
 const FUNNEL_STEPS = [
   "Infraestrutura & entregabilidade",
@@ -38,11 +44,50 @@ fetch("/api/health")
   })
   .catch(() => {});
 
+// ---------- planilha de emails ----------
+sheetFile.addEventListener("change", async () => {
+  const file = sheetFile.files?.[0];
+  if (!file) return;
+  sheetInfo.textContent = `Lendo ${file.name}…`;
+  sheetStatus.classList.remove("hidden");
+  try {
+    const buf = await file.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+    }
+    const resp = await fetch("/api/parse-sheet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, dataBase64: btoa(bin) }),
+    });
+    const result = await resp.json();
+    if (!resp.ok) throw new Error(result.error || `Erro ${resp.status}`);
+    sheet = { ...result, filename: file.name };
+    sheetInfo.textContent = `✓ ${file.name} — ${result.rows} registro(s) em ${result.sheets} aba(s). Será incluída na auditoria.`;
+  } catch (err) {
+    sheet = null;
+    sheetFile.value = "";
+    sheetInfo.textContent = `⚠️ ${err.message}`;
+  }
+});
+
+sheetRemove.addEventListener("click", () => {
+  sheet = null;
+  sheetFile.value = "";
+  sheetStatus.classList.add("hidden");
+});
+
 // ---------- turno 1: auditoria ----------
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   if (busy) return;
-  const data = Object.fromEntries(new FormData(form).entries());
+  const fd = new FormData(form);
+  const data = Object.fromEntries(fd.entries());
+  data.scope = fd.getAll("scope");
+  data.emailSheet = sheet?.text || "";
   const brief = buildUserPrompt(data);
 
   // começa uma conversa nova
@@ -76,6 +121,9 @@ chatInput.addEventListener("keydown", (e) => {
 clearBtn.addEventListener("click", () => {
   form.reset();
   messages = [];
+  sheet = null;
+  sheetFile.value = "";
+  sheetStatus.classList.add("hidden");
   thread.innerHTML = `<div class="empty-state" id="empty-state"><p>A análise aparece aqui — e vira uma conversa.</p></div>`;
   resultTools.classList.add("hidden");
   chatForm.classList.add("hidden");

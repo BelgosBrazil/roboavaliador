@@ -27,6 +27,16 @@ function metricRow(label, value) {
   return `- **${label}:** ${v || "—"}`;
 }
 
+const SCOPE_LABELS = {
+  oferta: "Oferta / ICP / CPC",
+  lista: "Lista & leads",
+  emails: "Copy & sequência de emails",
+  whatsapp: "WhatsApp",
+  prompt1a1: "Prompt de geração de conteúdo 1:1",
+  lp: "Landing page",
+  metricas: "Métricas & infraestrutura",
+};
+
 export function buildUserPrompt(intake = {}) {
   const stepKeys = [
     "q_sent",
@@ -60,6 +70,22 @@ export function buildUserPrompt(intake = {}) {
   );
   partes.push(cabecalho);
 
+  // Escopo selecionado pelo usuário (checkboxes). Vazio ou completo = funil todo.
+  const allScopes = Object.keys(SCOPE_LABELS);
+  const scope = Array.isArray(intake.scope)
+    ? intake.scope.filter((s) => allScopes.includes(s))
+    : [];
+  if (scope.length > 0 && scope.length < allScopes.length) {
+    const dentro = scope.map((s) => `**${SCOPE_LABELS[s]}**`).join(", ");
+    const fora = allScopes
+      .filter((s) => !scope.includes(s))
+      .map((s) => SCOPE_LABELS[s])
+      .join(", ");
+    partes.push(
+      `> **Escopo desta auditoria (selecionado pelo usuário):** analise a fundo APENAS: ${dentro}. Fora do escopo (${fora}): siga a regra de escopo restrito do método — sem seção completa, apenas alerta curto se os dados indicarem problema crítico acima no funil.\n`,
+    );
+  }
+
   // ---------- Bloco qualitativo ----------
   partes.push(`## Dados qualitativos\n`);
   partes.push(field("Setor / indústria do cliente", intake.sector));
@@ -67,6 +93,12 @@ export function buildUserPrompt(intake = {}) {
   partes.push(field("ICP — Perfil de Cliente Ideal", intake.icp));
   partes.push(field("Oferta / proposta de valor", intake.offer));
   partes.push(field("Sequência(s) de email (copy real)", intake.emailSeq));
+  partes.push(
+    field(
+      "Exemplos de emails enviados (importados de planilha — cada registro é um email; quando houver colunas, são partes/parágrafos do mesmo email)",
+      intake.emailSheet,
+    ),
+  );
   partes.push(
     field("Mensagens / sequência de WhatsApp (copy real)", intake.waSeq),
   );
