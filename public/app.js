@@ -32,6 +32,23 @@ const rowAddBtn = document.getElementById("row-add");
 const promptOptBtn = document.getElementById("prompt-opt-btn");
 const clientVersionBtn = document.getElementById("client-version-btn");
 const pdfBtn = document.getElementById("pdf-btn");
+const preflightBtn = document.getElementById("preflight-btn");
+const dnsDomain = document.getElementById("dns-domain");
+const dnsSelector = document.getElementById("dns-selector");
+const dnsCheckBtn = document.getElementById("dns-check-btn");
+const dnsStatus = document.getElementById("dns-status");
+const dnsResults = document.getElementById("dns-results");
+const winnersBtn = document.getElementById("winners-btn");
+const winnersModal = document.getElementById("winners-modal");
+const winnersClose = document.getElementById("winners-close");
+const winnerForm = document.getElementById("winner-form");
+const winnerStatus = document.getElementById("winner-status");
+const winnersList = document.getElementById("winners-list");
+const helpBtn = document.getElementById("help-btn");
+const helpModal = document.getElementById("help-modal");
+const helpClose = document.getElementById("help-close");
+const onboarding = document.getElementById("onboarding");
+const onboardingDismiss = document.getElementById("onboarding-dismiss");
 
 // ---------- estado ----------
 let messages = []; // histórico da conversa {role, content}
@@ -41,6 +58,7 @@ let currentMeta = { clientId: "", clientName: "", scope: [], kind: "auditoria" }
 let auditsCache = []; // lista de auditorias do cliente selecionado
 
 const sheets = { emails: null, whatsapp: null, leads: null };
+let dnsChecks = []; // resultados de verificações DNS { domain, overall, checks, text, checkedAt }
 
 const MODEL_LABELS = {
   "claude-fable-5": "Fable 5 (máximo)",
@@ -503,6 +521,171 @@ function fillRows(rows) {
   (Array.isArray(rows) ? rows : []).forEach((r) => addRow(r));
 }
 
+// ---------- verificação DNS ----------
+const DNS_EMOJI = { ok: "✅", warn: "⚠️", fail: "🔴" };
+
+function renderDnsCards() {
+  dnsResults.innerHTML = "";
+  dnsChecks.forEach((d, idx) => {
+    const card = document.createElement("div");
+    card.className = `dns-card dns-${d.overall}`;
+    const rows = ["spf", "dmarc", "dkim", "mx"]
+      .map((k) => {
+        const c = d.checks?.[k];
+        if (!c) return "";
+        return `<div class="dns-line"><span class="dns-k">${k.toUpperCase()}</span> ${DNS_EMOJI[c.status]} <span class="dns-d">${escText(c.detail)}</span></div>`;
+      })
+      .join("");
+    card.innerHTML = `
+      <div class="dns-card-head">
+        <strong>${escText(d.domain)}</strong>
+        <span class="hint">verificado em ${escText(d.checkedAt || "")}</span>
+        <button type="button" class="ghost small dns-remove">✕</button>
+      </div>
+      ${rows}
+      <p class="hint dns-foot">Este resultado entra na auditoria como evidência verificada.</p>
+    `;
+    card.querySelector(".dns-remove").addEventListener("click", () => {
+      dnsChecks.splice(idx, 1);
+      renderDnsCards();
+    });
+    dnsResults.appendChild(card);
+  });
+}
+
+function escText(s) {
+  const div = document.createElement("div");
+  div.textContent = s ?? "";
+  return div.innerHTML;
+}
+
+dnsCheckBtn.addEventListener("click", async () => {
+  const domain = dnsDomain.value.trim();
+  if (!domain) {
+    dnsStatus.textContent = "Digite o domínio de envio primeiro (ex.: envio.suaempresa.com.br).";
+    return;
+  }
+  dnsCheckBtn.disabled = true;
+  dnsStatus.textContent = `Consultando o DNS de ${domain}… (SPF, DMARC, DKIM, MX)`;
+  try {
+    const resp = await fetch("/api/dns-check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ domain, dkimSelector: dnsSelector.value.trim() || undefined }),
+    });
+    const result = await resp.json();
+    if (!resp.ok) throw new Error(result.error || `Erro ${resp.status}`);
+    dnsChecks = dnsChecks.filter((d) => d.domain !== result.domain);
+    dnsChecks.push(result);
+    renderDnsCards();
+    dnsDomain.value = "";
+    dnsSelector.value = "";
+    dnsStatus.textContent =
+      result.overall === "ok"
+        ? "✓ Verificado — tudo certo neste domínio."
+        : "✓ Verificado — há pontos de atenção (veja abaixo). Verifique outro domínio se usar mais de um.";
+  } catch (err) {
+    dnsStatus.textContent = `⚠️ ${err.message}`;
+  } finally {
+    dnsCheckBtn.disabled = false;
+  }
+});
+
+// ---------- biblioteca de vencedores ----------
+function openModal(el) {
+  el.classList.remove("hidden");
+}
+function closeModal(el) {
+  el.classList.add("hidden");
+}
+for (const [overlay, closeBtn] of [
+  [winnersModal, winnersClose],
+  [helpModal, helpClose],
+]) {
+  closeBtn.addEventListener("click", () => closeModal(overlay));
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeModal(overlay);
+  });
+}
+
+const WINNER_CHANNEL_PT = { email: "Email", whatsapp: "WhatsApp", lp: "LP", prompt: "Prompt 1:1", estrategia: "Estratégia" };
+
+async function renderWinners() {
+  try {
+    const winners = await (await fetch("/api/winners")).json();
+    winnersList.innerHTML = winners.length
+      ? "<h3>Salvos</h3>"
+      : `<p class="hint">Nenhum vencedor salvo ainda. Quando uma campanha performar, salve-a aqui — o avaliador passa a usá-la como referência em todas as análises.</p>`;
+    for (const w of winners) {
+      const item = document.createElement("div");
+      item.className = "winner-item";
+      item.innerHTML = `
+        <div class="winner-head">
+          <span class="winner-badge">${WINNER_CHANNEL_PT[w.channel] || w.channel}</span>
+          <strong>${escText(w.title)}</strong>
+          <button type="button" class="ghost small w-del">✕</button>
+        </div>
+        ${w.metrics ? `<div class="winner-metrics">📈 ${escText(w.metrics)}</div>` : ""}
+        <pre class="winner-content">${escText(w.content.slice(0, 400))}${w.content.length > 400 ? "…" : ""}</pre>
+      `;
+      item.querySelector(".w-del").addEventListener("click", async () => {
+        if (!confirm(`Excluir o vencedor "${w.title}"?`)) return;
+        await fetch(`/api/winners/${w.id}`, { method: "DELETE" });
+        renderWinners();
+      });
+      winnersList.appendChild(item);
+    }
+  } catch {
+    winnersList.innerHTML = `<p class="hint">⚠️ Não consegui carregar os vencedores.</p>`;
+  }
+}
+
+winnersBtn.addEventListener("click", () => {
+  openModal(winnersModal);
+  renderWinners();
+});
+
+winnerForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(winnerForm).entries());
+  winnerStatus.textContent = "Salvando…";
+  try {
+    const r = await (
+      await fetch("/api/winners", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+    ).json();
+    if (r.error) throw new Error(r.error);
+    winnerForm.reset();
+    winnerStatus.textContent = "✓ Salvo! Já vale para as próximas análises.";
+    setTimeout(() => (winnerStatus.textContent = ""), 3000);
+    renderWinners();
+  } catch (err) {
+    winnerStatus.textContent = `⚠️ ${err.message}`;
+  }
+});
+
+function openWinnerModalPrefilled(content) {
+  openModal(winnersModal);
+  renderWinners();
+  winnerForm.elements.content.value = content;
+  winnerForm.elements.clientName.value = currentMeta.clientName || "";
+  winnerForm.elements.title.focus();
+}
+
+// ---------- ajuda e onboarding ----------
+helpBtn.addEventListener("click", () => openModal(helpModal));
+
+if (!localStorage.getItem("belgos-onboarded")) {
+  onboarding.classList.remove("hidden");
+}
+onboardingDismiss.addEventListener("click", () => {
+  localStorage.setItem("belgos-onboarded", "1");
+  onboarding.classList.add("hidden");
+});
+
 // ---------- coleta e restauração do formulário ----------
 function collectIntake() {
   const fd = new FormData(form);
@@ -513,6 +696,7 @@ function collectIntake() {
   data.leadsSheet = sheets.leads?.text || "";
   data.lps = collectLps();
   data.dispatchRows = collectRows();
+  data.dnsChecks = dnsChecks;
   return data;
 }
 
@@ -540,6 +724,9 @@ function fillForm(intake) {
   restoreSheet("emails", intake.emailSheet || "");
   restoreSheet("whatsapp", intake.waSheet || "");
   restoreSheet("leads", intake.leadsSheet || "");
+  dnsChecks = Array.isArray(intake.dnsChecks) ? intake.dnsChecks : [];
+  renderDnsCards();
+  dnsStatus.textContent = "";
 }
 
 // ---------- conversa ----------
@@ -566,6 +753,21 @@ form.addEventListener("submit", (e) => {
     kind: "auditoria",
   });
   runTurn(brief, { type: "chip", text: `Brief enviado · ${nome}` }, true);
+});
+
+// Pré-voo: mesma coleta, modo preditivo (campanha ainda não disparada)
+preflightBtn.addEventListener("click", () => {
+  if (busy) return;
+  const data = collectIntake();
+  const brief = buildUserPrompt(data, { mode: "prevoo" });
+  const nome = (data.clientName || "").trim() || "cliente";
+  startConversation({
+    clientId: slugify(nome),
+    clientName: nome,
+    scope: data.scope,
+    kind: "pre-voo",
+  });
+  runTurn(brief, { type: "chip", text: `✈ Pré-voo · ${nome}` }, true);
 });
 
 chatForm.addEventListener("submit", (e) => {
@@ -755,6 +957,7 @@ async function runTurn(userContent, userDisplay, isFirst) {
 function setBusy(b) {
   runBtn.disabled = b;
   runBtn.textContent = b ? "Analisando…" : "Rodar auditoria";
+  preflightBtn.disabled = b;
   chatSend.disabled = b;
   chatInput.disabled = b;
   systemicBtn.disabled = b;
@@ -833,7 +1036,13 @@ function attachMsgTools(turnEl, content) {
       setTimeout(() => (cp.textContent = "Copiar"), 1500);
     } catch {}
   });
-  bar.append(pdf, cp);
+  const win = document.createElement("button");
+  win.type = "button";
+  win.className = "ghost tiny";
+  win.textContent = "⭐ Vencedor";
+  win.title = "Performou? Salve na Biblioteca de Vencedores — o avaliador passa a usar como referência";
+  win.addEventListener("click", () => openWinnerModalPrefilled(content));
+  bar.append(pdf, cp, win);
   turnEl.appendChild(bar);
 }
 

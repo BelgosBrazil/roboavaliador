@@ -22,6 +22,14 @@ Ele diferencia o que **vê** (✅ confirmado) do que **supõe** (⚠️ prováve
 
 O botão **Copiar / Baixar .md** exporta a conversa inteira (auditoria + iterações).
 
+**Verificação automática de DNS/entregabilidade:** na seção de infra, digite o domínio de envio e clique **Verificar DNS** — a ferramenta consulta o DNS de verdade (SPF, DMARC, DKIM nos 16 seletores mais comuns ou no que você informar, e MX) e injeta o resultado na auditoria como **evidência verificada**, com interpretação de cada problema (SPF duplicado/`+all`, DMARC `p=none`, sem MX etc.). Verifique quantos domínios usar; cada um vira um cartão.
+
+**✈ Pré-voo (validar ANTES de disparar):** para campanha que ainda não foi lançada. Preencha o mesmo formulário com o material planejado e clique **Pré-voo**: veredito 🟢 GO / 🟡 GO com ajustes / 🔴 NO-GO, riscos ranqueados com evidência, ajustes obrigatórios vs. recomendados, varredura de gatilhos de spam no copy e plano de ramp-up de volume. Previna antes de queimar lista e domínio.
+
+**⭐ Biblioteca de vencedores (melhoria contínua):** quando uma campanha performar, salve-a como vencedor (botão no topo, ou "⭐ Vencedor" em qualquer resposta do chat) — com a métrica que prova. A partir daí, **todas** as auditorias, reescritas e otimizações de prompt passam a usar os padrões comprovados da SUA operação como referência (injetados no cérebro do avaliador automaticamente). É o ativo proprietário da agência: o que funciona no seu mercado, com memória.
+
+**UX guiada:** banner de primeiros passos (4 passos, descartável), botão **?** no topo com o guia completo de uso, tooltips em todos os botões e dicas em todos os campos.
+
 **Clientes salvos e histórico:** a barra no topo do formulário salva o brief de cada cliente (recarregue com um clique) e guarda **todas as auditorias com data** em `data/` (fora do git). Reabra qualquer auditoria e continue a conversa de onde parou, compare a evolução do cliente entre as duas auditorias mais recentes (**Comparar evolução**) e faça backup/restauração de tudo em um JSON (⬇/⬆).
 
 **Análise da operação:** o botão no topo cruza a auditoria mais recente de **todos** os clientes salvos e responde à pergunta central: *qual é a falha comum da operação?* — com padrões quantificados ("X de N clientes"), correções em nível de operação e plano de 30 dias.

@@ -102,7 +102,7 @@ function dispatchRowsBlock(rows) {
 
 // ---------- brief principal ----------
 
-export function buildUserPrompt(intake = {}) {
+export function buildUserPrompt(intake = {}, { mode = "auditoria" } = {}) {
   const emailTotalsKeys = [
     "q_sent",
     "q_delivered",
@@ -133,8 +133,11 @@ export function buildUserPrompt(intake = {}) {
     clean(intake.metricsNotes);
   const hasInfra = Boolean(clean(intake.infra));
 
+  const isPrevoo = mode === "prevoo";
+
+  // No pré-voo, ausência de métricas é esperada (a campanha nem foi disparada).
   const lacunas = [];
-  if (!hasStepMetrics) lacunas.push("métricas por etapa");
+  if (!hasStepMetrics && !isPrevoo) lacunas.push("métricas por etapa");
   if (!hasInfra) lacunas.push("infraestrutura / entregabilidade");
 
   const cabecalho =
@@ -142,14 +145,21 @@ export function buildUserPrompt(intake = {}) {
       ? `> **Observação do sistema:** o usuário NÃO forneceu dados de: ${lacunas.join(
           " e ",
         )}. Trate essas lacunas como achado prioritário, conforme o método.\n`
-      : `> **Observação do sistema:** o usuário forneceu métricas e dados de infraestrutura. Aproveite os números.\n`;
+      : isPrevoo
+        ? ""
+        : `> **Observação do sistema:** o usuário forneceu métricas e dados de infraestrutura. Aproveite os números.\n`;
 
   const partes = [];
 
   partes.push(
-    `# Brief do cliente — ${clean(intake.clientName) || "(sem nome)"}\n`,
+    `# ${isPrevoo ? "Pré-voo (campanha ainda NÃO disparada)" : "Brief do cliente"} — ${clean(intake.clientName) || "(sem nome)"}\n`,
   );
-  partes.push(cabecalho);
+  if (isPrevoo) {
+    partes.push(
+      `> **MODO PRÉ-VOO:** a campanha abaixo AINDA NÃO FOI DISPARADA. Não audite resultados — faça a validação preditiva conforme a seção "Pré-voo" do método: veredito GO/NO-GO, riscos ranqueados, ajustes obrigatórios antes do disparo, varredura de spam e plano de ramp-up.\n`,
+    );
+  }
+  if (cabecalho) partes.push(cabecalho);
 
   // Escopo selecionado pelo usuário (checkboxes). Vazio ou completo = funil todo.
   const allScopes = Object.keys(SCOPE_LABELS);
@@ -268,6 +278,16 @@ export function buildUserPrompt(intake = {}) {
       intake.infra,
     ),
   );
+
+  // Verificações DNS feitas pela própria ferramenta (evidência real, não relato)
+  const dnsChecks = (Array.isArray(intake.dnsChecks) ? intake.dnsChecks : [])
+    .map((d) => clean(d?.text))
+    .filter(Boolean);
+  if (dnsChecks.length > 0) {
+    partes.push(
+      `### Verificação automática de DNS/entregabilidade (consulta DNS real feita pela ferramenta — evidência ✅ confirmada)\n${dnsChecks.join("\n\n")}\n`,
+    );
+  }
 
   return partes.join("\n");
 }

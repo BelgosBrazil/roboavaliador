@@ -8,6 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { buildSystemPrompt } from "./public/buildPrompt.js";
 import { parseSheetBuffer } from "./lib/parseSheet.js";
 import { fetchLandingPage } from "./lib/fetchLp.js";
+import { checkDomain } from "./lib/dnsCheck.js";
 import * as store from "./lib/store.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -182,6 +183,44 @@ app.post("/api/parse-sheet", async (req, res) => {
   }
 });
 
+// Verificação real de DNS/entregabilidade (SPF, DMARC, DKIM, MX) do domínio.
+app.post("/api/dns-check", async (req, res) => {
+  try {
+    const result = await checkDomain(req.body?.domain, {
+      dkimSelector: req.body?.dkimSelector,
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err?.message || "Não foi possível verificar o domínio." });
+  }
+});
+
+// ---------- biblioteca de vencedores ----------
+app.get("/api/winners", async (req, res) => {
+  try {
+    res.json(await store.listWinners());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/winners", async (req, res) => {
+  try {
+    res.json(await store.saveWinner(req.body || {}));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete("/api/winners/:id", async (req, res) => {
+  try {
+    await store.deleteWinner(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Busca a landing page pela URL e devolve o conteúdo extraído para o brief.
 app.post("/api/fetch-lp", async (req, res) => {
   try {
@@ -222,7 +261,12 @@ app.post("/api/chat", async (req, res) => {
 
   let systemPrompt;
   try {
-    systemPrompt = buildSystemPrompt(loadFramework());
+    // Framework (o "cérebro") + biblioteca de vencedores da operação: o
+    // avaliador referencia o que JÁ comprovou resultado nesta agência.
+    const winnersBlock = await store.winnersPromptBlock().catch(() => "");
+    systemPrompt = buildSystemPrompt(
+      loadFramework() + (winnersBlock ? `\n\n---\n\n${winnersBlock}` : ""),
+    );
   } catch (err) {
     return res
       .status(500)

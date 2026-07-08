@@ -28,6 +28,8 @@
           <select id="effort-select"></select>
         </label>
         <button type="button" id="systemic-btn" class="ghost small" title="Cruza as auditorias mais recentes de todos os clientes salvos e encontra a falha comum da operação">Análise da operação</button>
+        <button type="button" id="winners-btn" class="ghost small" title="Padrões que já comprovaram resultado na sua operação — o avaliador os usa como referência em toda análise">⭐ Vencedores</button>
+        <button type="button" id="help-btn" class="ghost small" title="Como usar a ferramenta">?</button>
         <div id="status" class="status" title="Configuração do modelo"></div>
       </div>
     </header>
@@ -57,11 +59,23 @@
           <span id="client-status" class="hint client-status"></span>
         </div>
 
+        <div id="onboarding" class="onboarding hidden">
+          <strong>Como funciona — 4 passos:</strong>
+          <ol>
+            <li><strong>Salve o cliente</strong> na barra acima (para reaproveitar o brief e criar histórico).</li>
+            <li><strong>Preencha o que tiver</strong> — planilhas (.xlsx/.csv), busca de LP por URL e verificação de DNS aceleram muito. Campo vazio vira lacuna apontada no diagnóstico.</li>
+            <li><strong>Rode:</strong> <em>Auditoria</em> para campanha que já rodou · <em>Pré-voo</em> para validar ANTES de disparar.</li>
+            <li><strong>Converse e exporte:</strong> itere no chat ("adapte à minha infra…"), gere a versão p/ cliente e o PDF. Tudo é salvo no histórico automaticamente.</li>
+          </ol>
+          <button type="button" id="onboarding-dismiss" class="ghost small">Entendi, não mostrar de novo</button>
+        </div>
+
         <p class="intro">
           Preencha o que tiver de <strong>um</strong> cliente. Campos vazios
           são tratados como lacuna (e viram achado). Quanto mais dado
           <em>quantitativo</em> (métricas) e <em>qualitativo</em> (copy, oferta,
-          leads), mais conclusivo o diagnóstico.
+          leads), mais conclusivo o diagnóstico. Dúvida? Clique no
+          <strong>?</strong> no topo.
         </p>
 
         <fieldset class="scope-box">
@@ -239,6 +253,18 @@
             <span class="hint">Domínios usados, SPF/DKIM/DMARC, warmup, ferramenta de disparo, volume/dia por caixa. Para WhatsApp: API oficial ou chip?</span>
             <textarea name="infra" rows="4" placeholder="Ex.: enviamos pelo domínio principal via RD Station, ~300/dia, sem warmup; wpp via chip comum…"></textarea>
           </label>
+
+          <label class="block-label">
+            Verificação automática de DNS
+            <span class="hint">Digite o domínio que faz os envios e a ferramenta consulta o DNS na hora: SPF, DMARC, DKIM e MX viram <strong>evidência verificada</strong> na auditoria (não opinião). Verifique todos os domínios de envio, um por vez.</span>
+          </label>
+          <div class="dns-row">
+            <input type="text" id="dns-domain" placeholder="envio.suaempresa.com.br" />
+            <input type="text" id="dns-selector" placeholder="seletor DKIM (opcional)" title="Se a sua ferramenta de disparo usa um seletor DKIM próprio (ex.: 'mail2'), informe aqui — senão testamos os 16 mais comuns" />
+            <button type="button" id="dns-check-btn" class="ghost">Verificar DNS</button>
+          </div>
+          <span id="dns-status" class="hint dns-status"></span>
+          <div id="dns-results"></div>
         </fieldset>
 
         <fieldset>
@@ -254,11 +280,18 @@
         </fieldset>
 
         <div class="actions">
-          <button type="submit" id="run-btn" class="primary">
+          <button type="submit" id="run-btn" class="primary" title="Para campanhas que JÁ rodaram: diagnóstico completo do funil com os resultados">
             Rodar auditoria
+          </button>
+          <button type="button" id="preflight-btn" class="secondary" title="Para campanhas que AINDA NÃO foram disparadas: veredito GO/NO-GO, riscos, ajustes obrigatórios e plano de ramp-up — previna antes de queimar lista e domínio">
+            ✈ Pré-voo
           </button>
           <button type="button" id="clear-btn" class="ghost">Limpar</button>
         </div>
+        <p class="actions-hint hint">
+          <strong>Auditoria</strong> = campanha que já rodou (diagnóstico dos resultados) ·
+          <strong>Pré-voo</strong> = campanha ainda não disparada (validação preditiva antes do lançamento).
+        </p>
       </form>
 
       <!-- ================= RESULTADO ================= -->
@@ -297,6 +330,83 @@
         </form>
       </section>
     </main>
+
+    <!-- ================= MODAL: VENCEDORES ================= -->
+    <div id="winners-modal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h2>⭐ Biblioteca de vencedores</h2>
+          <button type="button" class="ghost small" id="winners-close">✕</button>
+        </div>
+        <p class="hint">
+          Salve aqui o que <strong>comprovou resultado</strong> na sua operação
+          (um email, uma mensagem, uma headline de LP, um prompt, uma estratégia)
+          — <strong>com a métrica que prova</strong>. A partir daí, TODAS as
+          auditorias, reescritas e otimizações de prompt passam a usar esses
+          padrões como referência. É a memória do que funciona no SEU mercado.
+        </p>
+        <form id="winner-form" class="winner-form">
+          <div class="grid-2">
+            <label>Título*<input name="title" type="text" placeholder="Ex.: Email 1 que gerou 8 reuniões" required /></label>
+            <label>Canal
+              <select name="channel">
+                <option value="email">Email</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="lp">Landing page</option>
+                <option value="prompt">Prompt 1:1</option>
+                <option value="estrategia">Estratégia</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid-2">
+            <label>Cliente (opcional)<input name="clientName" type="text" placeholder="Em qual cliente performou" /></label>
+            <label>Prova / métricas*<input name="metrics" type="text" placeholder="Ex.: 11% resposta positiva em 640 envios (jun/26)" /></label>
+          </div>
+          <label>Conteúdo*<textarea name="content" rows="5" placeholder="Cole o email/mensagem/headline/prompt exatamente como performou…" required></textarea></label>
+          <label>Observações (opcional)<textarea name="notes" rows="2" placeholder="Por que você acha que funcionou, contexto do teste…"></textarea></label>
+          <div class="actions">
+            <button type="submit" class="primary">Salvar vencedor</button>
+            <span id="winner-status" class="hint"></span>
+          </div>
+        </form>
+        <div id="winners-list" class="winners-list"></div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL: AJUDA ================= -->
+    <div id="help-modal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h2>Como usar o Roboavaliador</h2>
+          <button type="button" class="ghost small" id="help-close">✕</button>
+        </div>
+        <div class="help-body">
+          <h3>O fluxo em 4 passos</h3>
+          <ol>
+            <li><strong>Salve o cliente</strong> (barra no topo do formulário). Isso cria o cadastro e liga o histórico de auditorias dele.</li>
+            <li><strong>Preencha o que tiver.</strong> Atalhos: planilhas .xlsx/.csv para emails, WhatsApp e leads · botão <em>Buscar</em> extrai a LP pela URL · <em>Verificar DNS</em> checa SPF/DMARC/DKIM/MX de verdade. Campo vazio não é problema — vira lacuna apontada com o que coletar.</li>
+            <li><strong>Rode a análise:</strong> <em>Rodar auditoria</em> para campanhas que já rodaram · <em>✈ Pré-voo</em> para validar uma campanha ANTES de disparar (GO/NO-GO + ajustes).</li>
+            <li><strong>Converse e exporte.</strong> O relatório vira um chat: "adapte à minha infra", "reescreva o email 2", "otimize o prompt". Cada resposta tem botão de <em>PDF</em> próprio — exporte só o trecho aprovado.</li>
+          </ol>
+          <h3>Botões do resultado</h3>
+          <ul>
+            <li><strong>Otimizar prompt 1:1</strong> — reescreve seu prompt de geração de conteúdo alinhado à estratégia acordada na conversa, com plano de teste A/B.</li>
+            <li><strong>Versão p/ cliente</strong> — gera o documento de apresentação (sem jargão interno) para o CS levar ao cliente. Depois clique <strong>PDF</strong>.</li>
+            <li><strong>⭐ Vencedor</strong> (em cada resposta) — salva um trecho que performou na Biblioteca de Vencedores.</li>
+          </ul>
+          <h3>Visão da operação</h3>
+          <ul>
+            <li><strong>Análise da operação</strong> (topo) — cruza a auditoria mais recente de todos os clientes salvos e encontra a falha COMUM, com plano de 30 dias.</li>
+            <li><strong>Comparar evolução</strong> — com 2+ auditorias do mesmo cliente, mostra o que melhorou, o que persiste e o próximo foco.</li>
+            <li><strong>⭐ Vencedores</strong> (topo) — sua biblioteca do que já funcionou; o avaliador a usa como referência em todas as análises.</li>
+          </ul>
+          <h3>Seus dados</h3>
+          <p>Clientes, auditorias e vencedores ficam em arquivos na pasta <code>data/</code> da SUA máquina (nada vai para nuvem além das chamadas à API da Anthropic durante a análise). Use <strong>⬇ Backup / ⬆ Importar</strong> para portar tudo entre computadores.</p>
+          <h3>Modelo e esforço</h3>
+          <p><strong>Opus 4.8</strong> é o padrão recomendado. <strong>Fable 5</strong> é o modelo mais capaz (mais caro) — use nas análises decisivas, com esforço <em>xhigh</em>. <strong>Sonnet 5</strong> é rápido e barato para triagens.</p>
+        </div>
+      </div>
+    </div>
 
     <script type="module" src="./app.js"></script>
   </body>

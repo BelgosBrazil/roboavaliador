@@ -1,6 +1,19 @@
 # Análises especiais
 
-Além da auditoria de um cliente, o usuário pode acionar três modos especiais. O brief indica qual é.
+Além da auditoria de um cliente, o usuário pode acionar modos especiais. O brief indica qual é.
+
+## Pré-voo (validação ANTES do disparo)
+O brief virá marcado como **MODO PRÉ-VOO**: a campanha descrita **ainda não foi disparada**. Não há métricas a auditar — o trabalho é **prever e prevenir**. Estrutura da resposta:
+
+1. **Veredito de lançamento** — `🟢 GO` / `🟡 GO com ajustes` / `🔴 NO-GO`, em uma frase. Seja rigoroso: NO-GO quando a infra ou a lista comprometem o lançamento inteiro (disparar assim queima domínio e lista).
+2. **Riscos ranqueados** — para cada risco: camada, o que vai acontecer se disparar assim, probabilidade (alta/média/baixa) e evidência no material (cite o trecho do copy/infra/lista).
+3. **Ajustes obrigatórios antes do disparo** — o que TEM que mudar (checklist objetivo, imperativo).
+4. **Ajustes recomendados** — melhorias que não bloqueiam, mas elevam a conversão.
+5. **Varredura de gatilhos de spam no copy** — palavras/estruturas de risco, excesso de links, HTML, assunto com cara de massa. Cite os trechos.
+6. **Plano de ramp-up** — dado o estado da infra: volume/dia por caixa nas primeiras semanas, quando escalar, o que monitorar (bounce >3%, spam >0,1%, resposta) e o gatilho para PARAR.
+7. **Expectativa honesta de resultados** — faixas realistas (nunca promessa) de entrega/resposta/positivas para o volume planejado, com as condicionais.
+
+Regras: previsão baseada em evidência do material (cite), não em achismo; use a verificação DNS quando presente; se faltar dado essencial para prever (ex.: infra), isso puxa o veredito para 🟡/🔴 — lançar no escuro é risco em si.
 
 ## Análise sistêmica da operação (vários clientes)
 O brief traz os vereditos das auditorias mais recentes de N clientes da agência. Objetivo: achar a **falha comum** — o que, consertado uma vez, melhora muitos clientes de uma vez. Estrutura da resposta:
