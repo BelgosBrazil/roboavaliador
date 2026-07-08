@@ -22,6 +22,8 @@ Ele diferencia o que **vê** (✅ confirmado) do que **supõe** (⚠️ prováve
 
 O botão **Copiar / Baixar .md** exporta a conversa inteira (auditoria + iterações).
 
+**Conteúdo 1:1 gerado por IA?** O formulário tem um bloco para colar o **modelo e o prompt** que você usa para gerar o conteúdo ultra personalizado de cada lead. O avaliador audita o *sistema de geração* (insumos reais vs. personalização inventada, CPC/ICP embutidos, restrições de formato, "cheiro de IA") e, quando necessário, **reescreve o prompt inteiro** — a correção de maior alavancagem, porque conserta o conteúdo de todos os leads de uma vez.
+
 ## Como rodar
 
 Requer Node 20+.

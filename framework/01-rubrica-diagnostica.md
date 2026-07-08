@@ -39,6 +39,17 @@ Avalie cada peça E a sequência como um todo:
 - **Assunto (email):** curto, sem clickbait, parece email 1:1 de humano? Assunto com cara de newsletter/promoção vai direto pra aba Promoções.
 - **WhatsApp:** o tom casa com o canal (mais próximo, curto) ou é o email copiado e colado? E — crítico — esse WhatsApp é **frio** (lista comprada) ou **morno** (lead que já interagiu)? Veja o Playbook Brasil.
 
+### 4b. Sistema de geração do conteúdo 1:1 (quando prompt/modelo de IA forem fornecidos)
+A agência produz conteúdo "ultra personalizado" por lead usando IA. Nesse caso, audite o **sistema que gera** o conteúdo, não só as peças que saíram dele:
+- **Insumo real vs. personalização inventada:** o prompt recebe **dados concretos do lead** (cargo, empresa, setor, porte, gatilho/momento) ou pede pro modelo "personalizar" sem insumo? Sem dado real, a IA **inventa** personalização — elogio genérico ("vi que sua empresa está crescendo!"), suposição não verificável — e isso derruba resposta mais que email sem personalização nenhuma.
+- **Conhecimento embutido:** o prompt carrega o **CPC, o ICP e a oferta** do cliente, ou o modelo escreve às cegas sobre um negócio que não conhece?
+- **Restrições de formato:** o prompt trava tamanho (50–125 palavras), 1 ideia / 1 CTA, texto puro, tom adequado ao setor do lead? Ou deixa o modelo livre (que por padrão escreve longo, formal e inflado)?
+- **Exemplos de referência:** o prompt inclui 1–3 exemplos do padrão BOM (few-shot)? Prompt sem exemplo produz média da internet; exemplo bom puxa o output pro seu padrão.
+- **"Cheiro de IA" no output:** compare o prompt com o copy real fornecido — estrutura idêntica em todos os leads, formalidade excessiva, frases infladas ("Espero que esta mensagem o encontre bem"), elogios vazios? Decisor recebe dezenas desses por semana e reconhece na hora.
+- **Variação:** o sistema produz variação real entre leads/toques ou é o mesmo esqueleto com `{empresa}` trocada? Personalização de verdade muda o **argumento**, não só o vocativo.
+- **Modelo adequado:** o modelo usado dá conta de seguir instruções longas e manter tom? Se o modelo é fraco pra tarefa, nenhum prompt salva.
+- **Correção:** quando houver problema, **reescreva o prompt de geração como entregável** (seção 4 do relatório) — versão completa, pronta pra colar, com: papel, CPC/ICP/oferta resumidos, dados de entrada exigidos por lead, restrições de formato, tom por setor, 1–2 exemplos bons e instrução anti-"cheiro de IA".
+
 ## 5. Landing page & conversão
 - **Match mensagem → LP:** a promessa do email/WhatsApp é a MESMA da headline da LP? Quebra de continuidade derruba conversão.
 - **Clareza em 5 segundos:** dá pra entender o que é, pra quem, e qual o próximo passo?

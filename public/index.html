@@ -90,7 +90,20 @@
         </fieldset>
 
         <fieldset>
-          <legend>3 · Métricas do funil <span class="quant">quantitativo</span></legend>
+          <legend>3 · Produção do conteúdo 1:1 <span class="qual">qualitativo</span></legend>
+          <label>
+            Modelo de IA usado para gerar o conteúdo
+            <input name="genModel" type="text" placeholder="Ex.: GPT-4o, Claude Sonnet, Gemini…" />
+          </label>
+          <label>
+            Prompt usado para gerar o conteúdo 1:1
+            <span class="hint">Cole o prompt completo (instruções + template). Inclua quais dados do lead alimentam o prompt (cargo, empresa, gatilho…) — o avaliador audita o sistema de geração, não só o texto final.</span>
+            <textarea name="genPrompt" rows="7" placeholder="Cole aqui o prompt que você usa hoje para gerar os emails/mensagens de cada lead…"></textarea>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>4 · Métricas do funil <span class="quant">quantitativo</span></legend>
           <label class="period">
             Período de referência dos números
             <input name="q_period" type="text" placeholder="Ex.: últimos 90 dias" />
@@ -112,7 +125,7 @@
         </fieldset>
 
         <fieldset>
-          <legend>4 · Infra & entregabilidade <span class="quant">quantitativo</span></legend>
+          <legend>5 · Infra & entregabilidade <span class="quant">quantitativo</span></legend>
           <label>
             Infraestrutura de envio
             <span class="hint">Domínios usados, SPF/DKIM/DMARC, warmup, ferramenta de disparo, volume/dia por caixa.</span>
@@ -121,7 +134,7 @@
         </fieldset>
 
         <fieldset>
-          <legend>5 · Histórico e panorama</legend>
+          <legend>6 · Histórico e panorama</legend>
           <label>
             Histórico de campanhas — o que já tentou e resultados
             <textarea name="history" rows="4" placeholder="O que já foi testado, o que mudou, o que aconteceu…"></textarea>

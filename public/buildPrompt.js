@@ -70,6 +70,18 @@ export function buildUserPrompt(intake = {}) {
   partes.push(
     field("Mensagens / sequência de WhatsApp (copy real)", intake.waSeq),
   );
+  partes.push(
+    field(
+      "Produção do conteúdo 1:1 — modelo de IA usado",
+      intake.genModel,
+    ),
+  );
+  partes.push(
+    field(
+      "Produção do conteúdo 1:1 — prompt de geração usado hoje (na íntegra)",
+      intake.genPrompt,
+    ),
+  );
   partes.push(field("Landing page — URL", intake.lpUrl));
   partes.push(field("Landing page — conteúdo / HTML / texto", intake.lpContent));
   partes.push(field("Amostra de leads", intake.leads));

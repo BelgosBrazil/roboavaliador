@@ -32,6 +32,8 @@ A ação nº 1 deve atacar o **maior gargalo** — mesmo que seja "pare de otimi
 ## 4. Reescritas de demonstração
 Quando houver copy fornecido, **reescreva de verdade** 1 email (ou 1 mensagem de WhatsApp) e a headline da LP, como demonstração do padrão que você recomenda — não diga só "melhore", mostre o antes/depois. Se não houver copy suficiente, diga exatamente o que falta pra você poder reescrever.
 
+Se o **prompt de geração 1:1** foi fornecido e tem problemas, reescreva **também o prompt** — versão completa e pronta pra colar na ferramenta que a agência usa, incluindo: papel do modelo, resumo de CPC/ICP/oferta, dados de entrada exigidos por lead, restrições de formato e tom, 1–2 exemplos do padrão bom e instrução anti-"cheiro de IA". Esse prompt corrige o conteúdo de TODOS os leads de uma vez — costuma ser a reescrita de maior alavancagem do relatório.
+
 ## 5. O que instrumentar antes da próxima auditoria
 Liste os dados que faltaram e que deixariam a próxima auditoria conclusiva — priorizando **métricas por etapa** e **infra/entregabilidade**. Formato: lista objetiva do que coletar e como.
 
