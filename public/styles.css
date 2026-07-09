@@ -360,13 +360,108 @@ body {
   height: 14px;
 }
 
-/* ---------- Controle das seções ---------- */
+/* ---------- Progresso do brief + controle das seções ---------- */
 .secs-ctl {
+  padding: 12px 16px;
+}
+.brief-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 0 4px;
+  margin-bottom: 8px;
+}
+.brief-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+}
+.brief-bar {
+  height: 8px;
+  border-radius: 20px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.brief-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 20px;
+  background: var(--accent-grad);
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s;
+}
+.brief-fill.full {
+  background: linear-gradient(135deg, #12b981, #0e9f6e);
+}
+.brief-missing {
+  margin: 7px 0 0;
+}
+
+/* ---------- Toasts ---------- */
+.toast-wrap {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-width: min(380px, calc(100vw - 36px));
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  animation: toast-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}
+.toast-out {
+  opacity: 0;
+  transform: translateX(14px);
+  transition: opacity 0.22s, transform 0.22s;
+}
+.toast-ic {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #fff;
+}
+.toast-success .toast-ic {
+  background: var(--ok);
+}
+.toast-error .toast-ic {
+  background: var(--danger);
+}
+.toast-info .toast-ic {
+  background: var(--accent);
+}
+.toast-success {
+  border-left: 3px solid var(--ok);
+}
+.toast-error {
+  border-left: 3px solid var(--danger);
+}
+.toast-info {
+  border-left: 3px solid var(--accent);
 }
 
 /* ---------- Seções (accordion) ---------- */

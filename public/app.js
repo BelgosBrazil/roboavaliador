@@ -18,7 +18,9 @@ const systemicBtn = document.getElementById("systemic-btn");
 const clientSelect = document.getElementById("client-select");
 const clientSaveBtn = document.getElementById("client-save");
 const clientDeleteBtn = document.getElementById("client-delete");
-const clientStatus = document.getElementById("client-status");
+const briefLabel = document.getElementById("brief-label");
+const briefFill = document.getElementById("brief-fill");
+const briefMissing = document.getElementById("brief-missing");
 const auditSelect = document.getElementById("audit-select");
 const auditDeleteBtn = document.getElementById("audit-delete");
 const compareBtn = document.getElementById("compare-btn");
@@ -90,11 +92,39 @@ function slugify(name) {
   return s || "cliente";
 }
 
-function flash(msg, ms = 3500) {
-  clientStatus.textContent = msg;
-  if (ms) setTimeout(() => {
-    if (clientStatus.textContent === msg) clientStatus.textContent = "";
-  }, ms);
+// ---------- toasts (notificações flutuantes) ----------
+let toastWrap = null;
+function toast(text, type = "info", ms = 3800) {
+  if (!toastWrap) {
+    toastWrap = document.createElement("div");
+    toastWrap.className = "toast-wrap";
+    document.body.appendChild(toastWrap);
+  }
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  const ic = document.createElement("span");
+  ic.className = "toast-ic";
+  ic.textContent = type === "success" ? "✓" : type === "error" ? "!" : "•";
+  const tx = document.createElement("span");
+  tx.textContent = text;
+  t.append(ic, tx);
+  toastWrap.appendChild(t);
+
+  let gone = false;
+  const dismiss = () => {
+    if (gone) return;
+    gone = true;
+    t.classList.add("toast-out");
+    setTimeout(() => t.remove(), 250);
+  };
+  t.addEventListener("click", dismiss);
+  setTimeout(dismiss, ms);
+}
+
+// Mantém a assinatura antiga: mensagens com ✓ viram sucesso, ⚠ viram erro.
+function flash(msg, ms = 3800) {
+  const type = /^⚠/.test(msg) ? "error" : /^✓/.test(msg) ? "success" : "info";
+  toast(msg.replace(/^[✓⚠️️]+\s*/u, ""), type, ms);
 }
 
 // ---------- health + seletores de modelo/esforço ----------
@@ -713,12 +743,65 @@ function sectionFilledCount(sec) {
   return n;
 }
 
+// Itens essenciais do brief (o que torna o diagnóstico conclusivo).
+// WhatsApp e prompt 1:1 são bônus — não penalizam quem não os usa.
+const fieldVal = (name) => form.elements[name]?.value?.trim() || "";
+const BRIEF_ITEMS = [
+  { label: "nome do cliente", filled: () => !!fieldVal("clientName") },
+  { label: "CPC", filled: () => !!fieldVal("cpc") },
+  { label: "ICP", filled: () => !!fieldVal("icp") },
+  { label: "oferta", filled: () => !!fieldVal("offer") },
+  {
+    label: "copy de emails",
+    filled: () => !!fieldVal("emailSeq") || !!sheets.emails?.text,
+  },
+  {
+    label: "landing page",
+    filled: () => collectLps().some((lp) => lp.url || lp.content),
+  },
+  {
+    label: "amostra de leads",
+    filled: () => !!fieldVal("leads") || !!sheets.leads?.text,
+  },
+  {
+    label: "métricas",
+    filled: () =>
+      [
+        "q_sent", "q_delivered", "q_opened", "q_replied", "q_positive",
+        "q_meetings", "q_bounce", "q_spam", "wa_sent", "wa_delivered",
+        "wa_read", "wa_replied", "wa_positive", "wa_meetings", "wa_blocks",
+        "wa_banned", "metricsNotes",
+      ].some((k) => fieldVal(k)) || collectRows().length > 0,
+  },
+  {
+    label: "infra/DNS",
+    filled: () => !!fieldVal("infra") || dnsChecks.length > 0,
+  },
+];
+
+function updateBriefProgress() {
+  const missing = BRIEF_ITEMS.filter((i) => !i.filled()).map((i) => i.label);
+  const done = BRIEF_ITEMS.length - missing.length;
+  const pct = Math.round((done / BRIEF_ITEMS.length) * 100);
+  briefFill.style.width = `${pct}%`;
+  briefFill.classList.toggle("full", pct === 100);
+  if (pct === 100) {
+    briefLabel.textContent = "Brief 100% completo";
+    briefMissing.textContent = "✓ Pronto para uma auditoria conclusiva.";
+  } else {
+    briefLabel.textContent = `Brief ${pct}% completo`;
+    const first = missing.slice(0, 3).join(", ");
+    briefMissing.textContent = `Falta: ${first}${missing.length > 3 ? ` +${missing.length - 3}` : ""} — campos vazios viram lacunas no diagnóstico.`;
+  }
+}
+
 function updateCounters() {
   for (const sec of sections) {
     const n = sectionFilledCount(sec);
     const badge = sec.querySelector(".sec-count");
     if (badge) badge.textContent = n ? `${n} preenchido${n > 1 ? "s" : ""}` : "";
   }
+  updateBriefProgress();
 }
 
 function autoOpenSections() {

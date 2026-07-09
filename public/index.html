@@ -60,7 +60,6 @@
             <button type="button" id="backup-import-btn" class="ghost small" title="Restaura um backup JSON">⬆ Importar</button>
             <input type="file" id="backup-import" accept=".json" class="visually-hidden" />
           </div>
-          <span id="client-status" class="hint client-status"></span>
         </div>
 
         <div id="onboarding" class="onboarding hidden">
@@ -93,9 +92,15 @@
           </div>
         </div>
 
-        <div class="secs-ctl">
-          <span class="hint">Preencha as seções abaixo — os contadores mostram o que já foi informado.</span>
-          <button type="button" id="toggle-secs" class="ghost small">Expandir tudo</button>
+        <div class="panel secs-ctl">
+          <div class="brief-top">
+            <span id="brief-label" class="brief-label">Brief 0% completo</span>
+            <button type="button" id="toggle-secs" class="ghost small">Expandir tudo</button>
+          </div>
+          <div class="brief-bar" title="Quanto mais completo o brief, mais conclusivo o diagnóstico">
+            <div id="brief-fill" class="brief-fill"></div>
+          </div>
+          <span id="brief-missing" class="hint brief-missing"></span>
         </div>
 
         <!-- ============ 1 · CONTEXTO ============ -->
