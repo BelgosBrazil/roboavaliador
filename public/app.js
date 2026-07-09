@@ -49,6 +49,9 @@ const helpModal = document.getElementById("help-modal");
 const helpClose = document.getElementById("help-close");
 const onboarding = document.getElementById("onboarding");
 const onboardingDismiss = document.getElementById("onboarding-dismiss");
+const toggleSecsBtn = document.getElementById("toggle-secs");
+const resultDot = document.getElementById("result-dot");
+const sections = [...document.querySelectorAll("details.sec")];
 
 // ---------- estado ----------
 let messages = []; // histórico da conversa {role, content}
@@ -380,6 +383,7 @@ function wireSheet(slot) {
       if (!resp.ok) throw new Error(result.error || `Erro ${resp.status}`);
       sheets[slot] = { ...result, filename: file.name };
       info.textContent = `✓ ${file.name} — ${result.rows} registro(s) em ${result.sheets} aba(s). Incluída na auditoria.`;
+      updateCounters();
     } catch (err) {
       sheets[slot] = null;
       input.value = "";
@@ -391,6 +395,7 @@ function wireSheet(slot) {
     sheets[slot] = null;
     input.value = "";
     status.classList.add("hidden");
+    updateCounters();
   });
 }
 ["emails", "whatsapp", "leads"].forEach(wireSheet);
@@ -406,6 +411,7 @@ function restoreSheet(slot, text) {
     sheets[slot] = null;
     status.classList.add("hidden");
   }
+  updateCounters();
 }
 
 // ---------- landing pages (múltiplas) ----------
@@ -431,6 +437,7 @@ function addLpBlock(lp = {}) {
   block.querySelector(".lp-remove").addEventListener("click", () => {
     block.remove();
     if (!lpList.children.length) addLpBlock();
+    updateCounters();
   });
 
   const fetchBtn = block.querySelector(".lp-fetch");
@@ -500,7 +507,10 @@ function addRow(values = {}) {
     const el = tr.querySelector(`.r-${f}`);
     if (el && values[f] !== undefined) el.value = values[f];
   }
-  tr.querySelector(".r-remove").addEventListener("click", () => tr.remove());
+  tr.querySelector(".r-remove").addEventListener("click", () => {
+    tr.remove();
+    updateCounters();
+  });
   rowsBody.appendChild(tr);
 }
 
@@ -551,6 +561,7 @@ function renderDnsCards() {
     });
     dnsResults.appendChild(card);
   });
+  updateCounters();
 }
 
 function escText(s) {
@@ -686,6 +697,50 @@ onboardingDismiss.addEventListener("click", () => {
   onboarding.classList.add("hidden");
 });
 
+// ---------- seções recolhíveis: contadores e expandir/recolher ----------
+function sectionFilledCount(sec) {
+  let n = 0;
+  for (const el of sec.querySelectorAll("input[name], textarea[name], select[name]")) {
+    if (el.type === "file" || el.type === "checkbox") continue;
+    if (el.value.trim()) n++;
+  }
+  if (sec.id === "sec-2") {
+    n += ["emails", "whatsapp", "leads"].filter((s) => sheets[s]?.text).length;
+    n += collectLps().length;
+  }
+  if (sec.id === "sec-4") n += collectRows().length;
+  if (sec.id === "sec-5") n += dnsChecks.length;
+  return n;
+}
+
+function updateCounters() {
+  for (const sec of sections) {
+    const n = sectionFilledCount(sec);
+    const badge = sec.querySelector(".sec-count");
+    if (badge) badge.textContent = n ? `${n} preenchido${n > 1 ? "s" : ""}` : "";
+  }
+}
+
+function autoOpenSections() {
+  sections.forEach((sec, i) => {
+    sec.open = i === 0 || sectionFilledCount(sec) > 0;
+  });
+  syncToggleLabel();
+}
+
+function syncToggleLabel() {
+  const allOpen = sections.every((s) => s.open);
+  toggleSecsBtn.textContent = allOpen ? "Recolher tudo" : "Expandir tudo";
+}
+
+toggleSecsBtn.addEventListener("click", () => {
+  const allOpen = sections.every((s) => s.open);
+  sections.forEach((s) => (s.open = !allOpen));
+  syncToggleLabel();
+});
+sections.forEach((s) => s.addEventListener("toggle", syncToggleLabel));
+form.addEventListener("input", () => updateCounters());
+
 // ---------- coleta e restauração do formulário ----------
 function collectIntake() {
   const fd = new FormData(form);
@@ -727,6 +782,8 @@ function fillForm(intake) {
   dnsChecks = Array.isArray(intake.dnsChecks) ? intake.dnsChecks : [];
   renderDnsCards();
   dnsStatus.textContent = "";
+  updateCounters();
+  autoOpenSections();
 }
 
 // ---------- conversa ----------
@@ -955,6 +1012,7 @@ async function runTurn(userContent, userDisplay, isFirst) {
 
 // ---------- helpers de UI ----------
 function setBusy(b) {
+  resultDot.classList.toggle("live", b);
   runBtn.disabled = b;
   runBtn.textContent = b ? "Analisando…" : "Rodar auditoria";
   preflightBtn.disabled = b;
@@ -1087,6 +1145,8 @@ function conversationMarkdown() {
 // ---------- inicialização ----------
 fillLps([{}]);
 loadClients();
+updateCounters();
+syncToggleLabel();
 
 // ---------- markdown renderer (self-contained, sem dependências) ----------
 function esc(s) {
