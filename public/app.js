@@ -730,6 +730,21 @@ for (const radio of form.querySelectorAll('input[name="opMode"]')) {
   radio.addEventListener("change", applyMode);
 }
 
+// ---------- tema (escuro por padrão) ----------
+const themeToggle = document.getElementById("theme-toggle");
+function syncThemeIcon() {
+  themeToggle.textContent =
+    document.documentElement.dataset.theme === "dark" ? "☀️" : "🌙";
+}
+themeToggle.addEventListener("click", () => {
+  const next =
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem("belgos-theme", next);
+  syncThemeIcon();
+});
+syncThemeIcon();
+
 // ---------- ajuda e onboarding ----------
 helpBtn.addEventListener("click", () => openModal(helpModal));
 

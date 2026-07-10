@@ -7,9 +7,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // aplica o tema salvo antes do primeiro paint (padrão: escuro)
+      document.documentElement.dataset.theme =
+        localStorage.getItem("belgos-theme") || "dark";
+    </script>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -33,6 +38,7 @@
         <span class="ctl-sep"></span>
         <button type="button" id="systemic-btn" class="ghost small" title="Cruza as auditorias mais recentes de todos os clientes salvos e encontra a falha comum da operação">Análise da operação</button>
         <button type="button" id="winners-btn" class="ghost small" title="Padrões que já comprovaram resultado na sua operação — o avaliador os usa como referência em toda análise">⭐ Vencedores</button>
+        <button type="button" id="theme-toggle" class="ghost small round" title="Alternar tema claro/escuro">☀️</button>
         <button type="button" id="help-btn" class="ghost small round" title="Como usar a ferramenta">?</button>
         <div id="status" class="status" title="Configuração do modelo"></div>
       </div>

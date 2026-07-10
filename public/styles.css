@@ -34,31 +34,39 @@
   font-synthesis-weight: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b0e15;
-    --bg-grad: radial-gradient(1200px 500px at 85% -10%, rgba(91, 127, 255, 0.10), transparent 60%),
-      radial-gradient(900px 420px at -10% 0%, rgba(122, 77, 232, 0.08), transparent 55%);
-    --panel: #131826;
-    --panel-2: #0f1420;
-    --ink: #e9edf6;
-    --muted: #93a0b8;
-    --line: #232b3d;
-    --line-strong: #34405a;
-    --accent: #6b8aff;
-    --accent-2: #4c66e6;
-    --accent-grad: linear-gradient(135deg, #5b7fff 0%, #3d55d6 100%);
-    --accent-soft: rgba(107, 138, 255, 0.13);
-    --accent-ring: rgba(107, 138, 255, 0.30);
-    --ok: #34c78f;
-    --warn-c: #f0a04a;
-    --danger: #ef6d84;
-    --quant: #3fbf95;
-    --qual: #b191ff;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.45), 0 16px 40px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.55), 0 40px 80px rgba(0, 0, 0, 0.45);
-  }
+:root {
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --glow: 0 0 0 transparent;
+}
+
+/* Tema escuro — padrão da ferramenta ("ultra tech"); o toggle grava a escolha */
+:root[data-theme="dark"] {
+  --bg: #07090f;
+  --bg-grad: radial-gradient(1100px 480px at 85% -10%, rgba(91, 127, 255, 0.14), transparent 60%),
+    radial-gradient(900px 420px at -10% 0%, rgba(122, 77, 232, 0.10), transparent 55%),
+    radial-gradient(rgba(120, 140, 190, 0.05) 1px, transparent 1.4px);
+  --bg-grad-size: auto, auto, 26px 26px;
+  --panel: #10141f;
+  --panel-2: #0b0f18;
+  --ink: #e9edf6;
+  --muted: #8e9cb5;
+  --line: #1f2637;
+  --line-strong: #33405c;
+  --accent: #6b8aff;
+  --accent-2: #4c66e6;
+  --accent-grad: linear-gradient(135deg, #5b7fff 0%, #3d55d6 100%);
+  --accent-soft: rgba(107, 138, 255, 0.13);
+  --accent-ring: rgba(107, 138, 255, 0.30);
+  --accent-ink: #ffffff;
+  --glow: 0 0 22px rgba(91, 127, 255, 0.28);
+  --ok: #34c78f;
+  --warn-c: #f0a04a;
+  --danger: #ef6d84;
+  --quant: #3fbf95;
+  --qual: #b191ff;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 2px 10px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.5), 0 16px 40px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.6), 0 40px 80px rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -73,12 +81,26 @@ body {
   margin: 0;
   background: var(--bg);
   background-image: var(--bg-grad);
+  background-size: var(--bg-grad-size, auto);
   background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: 14px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+}
+
+/* filete de gradiente no topo — assinatura da marca */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #3d63ff, #7a4de8 45%, #2440c9);
+  z-index: 60;
+  pointer-events: none;
 }
 
 ::selection {
@@ -131,7 +153,7 @@ body {
   background: var(--accent-grad);
   color: #fff;
   font-size: 17px;
-  box-shadow: 0 4px 14px var(--accent-ring);
+  box-shadow: 0 4px 14px var(--accent-ring), var(--glow);
   flex: 0 0 auto;
 }
 .topbar h1 {
@@ -384,11 +406,26 @@ body {
   overflow: hidden;
 }
 .brief-fill {
+  position: relative;
   height: 100%;
   width: 0%;
   border-radius: 20px;
   background: var(--accent-grad);
   transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s;
+  overflow: hidden;
+}
+.brief-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: shimmer 2.6s infinite;
+}
+@keyframes shimmer {
+  60%, 100% {
+    transform: translateX(100%);
+  }
 }
 .brief-fill.full {
   background: linear-gradient(135deg, #12b981, #0e9f6e);
@@ -471,6 +508,7 @@ details.sec {
 }
 details.sec[open] {
   box-shadow: var(--shadow-md);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
 }
 .sec-head {
   display: flex;
@@ -540,7 +578,8 @@ details.sec[open] {
   background: color-mix(in srgb, var(--quant) 13%, transparent);
 }
 .sec-count {
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
   font-weight: 700;
   color: var(--accent);
   background: var(--accent-soft);
@@ -665,6 +704,12 @@ input[type="file"]::file-selector-button {
   font-size: 11.5px;
   margin-bottom: 0;
 }
+.grid-metrics input,
+.rows-table input,
+.rows-table select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
 .period {
   max-width: 320px;
 }
@@ -711,10 +756,11 @@ button:disabled {
 .primary {
   background: var(--accent-grad);
   color: var(--accent-ink);
-  box-shadow: 0 3px 12px var(--accent-ring);
+  box-shadow: 0 3px 12px var(--accent-ring), var(--glow);
 }
 .primary:hover:not(:disabled) {
-  filter: brightness(1.08);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 18px var(--accent-ring), var(--glow);
 }
 .secondary {
   background: transparent;
@@ -1086,6 +1132,7 @@ button:disabled {
   background: var(--accent-soft);
   color: var(--accent);
   font-size: 24px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent), var(--glow);
 }
 .empty-title {
   font-family: var(--font-display);
