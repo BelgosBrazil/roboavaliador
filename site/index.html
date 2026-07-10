@@ -133,7 +133,7 @@ header.hero {
   position: relative; padding-bottom: 56px; overflow: hidden;
 }
 #radar { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
-.hero .container { position: relative; z-index: 2; }
+.hero .container { position: relative; z-index: 2; will-change: transform; }
 .hero .eyebrow { color: var(--ink-2); margin-bottom: 26px; display: flex; gap: 10px; align-items: center; }
 .hero .eyebrow .dia { color: var(--orange); }
 .hero h1 {
@@ -186,7 +186,7 @@ body.ready .telemetry { animation: fadeup .8s ease 1.35s forwards; }
 
 /* ============ MARQUEE ============ */
 .marquee { border-block: 1px solid var(--line); padding: 16px 0; overflow: hidden; background: var(--bg-2); }
-.marquee .track { display: flex; gap: 0; width: max-content; animation: mq 28s linear infinite; }
+.marquee .track { display: flex; gap: 0; width: max-content; will-change: transform; }
 .marquee span {
   font-family: var(--disp); font-weight: 600; font-size: 20px; letter-spacing: .01em;
   white-space: nowrap; padding-right: 26px; color: var(--ink);
@@ -290,6 +290,22 @@ section { padding: 130px 0; position: relative; }
   border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; color: var(--ink-2);
 }
 
+/* ---- soluções / práticas ---- */
+.prac-row {
+  display: grid; grid-template-columns: 1fr 210px; gap: 28px; align-items: start;
+  padding: 40px 0; border-top: 1px solid var(--line);
+}
+.prac-row:last-of-type { border-bottom: 1px solid var(--line); }
+.prac-row h3 { font-size: clamp(28px, 3.4vw, 48px); font-weight: 800; letter-spacing: -.025em; transition: color .3s ease; }
+.prac-row:hover h3 { color: var(--orange); }
+.prac-row p { color: var(--ink-2); max-width: 68ch; margin-top: 10px; font-size: 16px; }
+.prac-row .ptag {
+  justify-self: end; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+  text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 14px; color: var(--ink-2); white-space: nowrap;
+}
+.prac-row .ptag.hot { border-color: var(--orange); color: var(--orange); }
+
 /* ---- processo ---- */
 #processo .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
 #processo .step { padding: 40px 34px 46px; background: var(--card); border-right: 1px solid var(--line); position: relative; transition: background .3s ease; }
@@ -338,6 +354,8 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   #processo .step { border-right: 0; border-bottom: 1px solid var(--line); }
   #processo .step:last-child { border-bottom: 0; }
   .check-row { grid-template-columns: 74px 1fr; }
+  .prac-row { grid-template-columns: 1fr; }
+  .prac-row .ptag { justify-self: start; order: -1; }
   .check-row .st { display: none; }
   section { padding: 90px 0; }
 }
@@ -366,6 +384,7 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
     <a href="#metodo">Método</a>
     <a href="#motor">Motor 1:1</a>
     <a href="#robo">Roboavaliador</a>
+    <a href="#solucoes">Soluções</a>
     <a href="#processo">Processo</a>
     <button id="themeBtn" title="alternar tema" aria-label="alternar tema">◐</button>
     <a class="nav-cta" href="mailto:contato@belgos.co">Pedir diagnóstico</a>
@@ -414,6 +433,8 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
     <span>IA 1:1</span><span class="dia">◆</span>
     <span>LANDING PAGES</span><span class="dia">◆</span>
     <span>PRÉ-VOO GO/NO-GO</span><span class="dia">◆</span>
+    <span>AGENTES DE IA</span><span class="dia">◆</span>
+    <span>REVOPS</span><span class="dia">◆</span>
   </div>
 </div>
 
@@ -501,10 +522,43 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   </div>
 </section>
 
-<section id="processo">
+<section id="solucoes">
   <div class="container">
     <div class="sec-head rv">
       <span class="idx">04</span>
+      <h2>Engenharia de receita, ponta a ponta</h2>
+      <div class="rule"></div>
+    </div>
+    <p class="rv" style="max-width:62ch; color:var(--ink-2); margin-bottom:56px">A mesma engenharia que roda a prospecção constrói sistemas de receita inteiros. Três frentes, um padrão: medir, automatizar e melhorar em ciclo.</p>
+
+    <div class="prac-row rv">
+      <div>
+        <h3>Agentes de IA sob medida</h3>
+        <p>Agentes que executam trabalho de verdade na sua operação: qualificam leads, auditam campanhas, enriquecem dados, respondem e conversam com os seus sistemas. O Roboavaliador que você viu acima nasceu assim. O próximo pode ser seu.</p>
+      </div>
+      <span class="ptag hot">agentic solutions</span>
+    </div>
+    <div class="prac-row rv">
+      <div>
+        <h3>RevOps</h3>
+        <p>Receita como sistema: CRM arrumado, funil instrumentado de ponta a ponta, dados confiáveis e automações que tiram o trabalho manual do seu time comercial. Decisão por número, não por sensação.</p>
+      </div>
+      <span class="ptag">revenue operations</span>
+    </div>
+    <div class="prac-row rv">
+      <div>
+        <h3>Prospecção outbound</h3>
+        <p>A operação completa que esta página descreve: infraestrutura, lista validada, oferta, copy 1:1, landing pages e medição, com pré-voo antes de cada disparo.</p>
+      </div>
+      <span class="ptag">core</span>
+    </div>
+  </div>
+</section>
+
+<section id="processo">
+  <div class="container">
+    <div class="sec-head rv">
+      <span class="idx">05</span>
       <h2>Como a gente começa</h2>
       <div class="rule"></div>
     </div>
@@ -588,11 +642,13 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
     });
     if (p === 0) {
       clearInterval(tick);
+      const big = loader.querySelector(".big");
+      big.innerHTML = '<span style="color:var(--green)">GO</span>';
       setTimeout(() => {
         loader.classList.add("done");
         document.body.classList.add("ready");
         setTimeout(() => loader.remove(), 1000);
-      }, 220);
+      }, reduced ? 60 : 420);
     }
   }, reduced ? 1 : 52);
 
@@ -768,6 +824,29 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
       obs.disconnect();
     });
   }, { threshold: 0.4 }).observe(conEl);
+
+  /* ---------- coreografia de scroll: parallax + marquee ---------- */
+  const heroC = document.querySelector(".hero .container");
+  const radarEl = document.getElementById("radar");
+  let lastY = scrollY, vel = 0, mqx = 0;
+  if (!reduced) {
+    (function motion() {
+      const dy = scrollY - lastY; lastY = scrollY;
+      vel += (dy - vel) * 0.12;
+      // marquee: base + resposta à velocidade (em qualquer direção)
+      const half = mq.scrollWidth / 2;
+      mqx -= 0.85 + Math.min(Math.abs(vel) * 0.35, 7);
+      if (mqx <= -half) mqx += half;
+      mq.style.transform = `translateX(${mqx}px)`;
+      // hero sai de cena com profundidade
+      if (scrollY < innerHeight * 1.2) {
+        heroC.style.transform = `translateY(${scrollY * -0.10}px)`;
+        radarEl.style.transform = `translateY(${scrollY * 0.06}px)`;
+        radarEl.style.opacity = String(Math.max(0, 1 - scrollY / (innerHeight * 0.9)));
+      }
+      requestAnimationFrame(motion);
+    })();
+  }
 
   /* ---------- botões magnéticos ---------- */
   if (!reduced && matchMedia("(hover: hover)").matches) {
