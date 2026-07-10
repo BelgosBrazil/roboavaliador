@@ -1393,6 +1393,51 @@ button:disabled {
   font-size: 0.9em;
 }
 
+/* ---------- Modo de operação (cold × RD Station) ---------- */
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 560px) {
+  .mode-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.mode-opt {
+  align-items: flex-start;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.mode-opt span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mode-opt small {
+  font-weight: 500;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.mode-opt:has(input:checked) small {
+  color: color-mix(in srgb, var(--accent) 75%, var(--muted));
+}
+.mode-opt input {
+  margin-top: 2px;
+}
+
+/* campos visíveis apenas no modo RD Station */
+.rd-only {
+  display: none !important;
+}
+body[data-mode="rdstation"] .rd-only {
+  display: block !important;
+}
+body[data-mode="rdstation"] .check.rd-only {
+  display: inline-flex !important;
+}
+
 .hidden {
   display: none !important;
 }

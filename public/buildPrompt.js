@@ -33,6 +33,7 @@ const SCOPE_LABELS = {
   emails: "Copy & sequência de emails",
   whatsapp: "WhatsApp",
   prompt1a1: "Prompt de geração de conteúdo 1:1",
+  automacoes: "Automações & lead scoring",
   lp: "Landing page",
   metricas: "Métricas & infraestrutura",
 };
@@ -159,6 +160,14 @@ export function buildUserPrompt(intake = {}, { mode = "auditoria" } = {}) {
       `> **MODO PRÉ-VOO:** a campanha abaixo AINDA NÃO FOI DISPARADA. Não audite resultados — faça a validação preditiva conforme a seção "Pré-voo" do método: veredito GO/NO-GO, riscos ranqueados, ajustes obrigatórios antes do disparo, varredura de spam e plano de ramp-up.\n`,
     );
   }
+
+  // Modo de operação declarado pelo usuário
+  const isRd = clean(intake.opMode) === "rdstation";
+  if (isRd) {
+    partes.push(
+      `> **MODO DE OPERAÇÃO: RD STATION.** Toda a operação roda dentro da RD Station (leads já na base — inclusive de prospecção —, emails standalone, fluxos por estágio e lead scoring). Aplique a seção "Modo RD Station" do método. A escolha da plataforma é um DADO: não julgue se a RD é a ferramenta certa — otimize dentro dela.\n`,
+    );
+  }
   if (cabecalho) partes.push(cabecalho);
 
   // Escopo selecionado pelo usuário (checkboxes). Vazio ou completo = funil todo.
@@ -210,6 +219,19 @@ export function buildUserPrompt(intake = {}, { mode = "auditoria" } = {}) {
       intake.waSheet,
     ),
   );
+
+  // Fluxos de automação e scoring (modo RD Station — ou quando preenchidos)
+  const rdCampos = [
+    ["Fluxo(s) de ATENÇÃO — topo (gatilhos, emails, delays, condições)", intake.flowAttention],
+    ["Fluxo(s) de CONSIDERAÇÃO — meio", intake.flowConsideration],
+    ["Fluxo(s) de DECISÃO — fundo", intake.flowDecision],
+    ["Racional da jornada (critérios de transição entre estágios, papel do standalone vs. fluxo, handoff para vendas)", intake.flowRationale],
+    ["Régua de lead scoring (perfil, interesse, pontos, threshold de MQL e o que acontece ao atingi-lo)", intake.leadScoring],
+  ];
+  if (isRd || rdCampos.some(([, v]) => clean(v))) {
+    partes.push(`### Automações & lead scoring${isRd ? " (RD Station)" : ""}\n`);
+    for (const [label, value] of rdCampos) partes.push(field(label, value));
+  }
   partes.push(
     field(
       "Produção do conteúdo 1:1 — modelo de IA usado",
@@ -246,9 +268,11 @@ export function buildUserPrompt(intake = {}, { mode = "auditoria" } = {}) {
     metricRow("Enviados", intake.q_sent),
     metricRow("Entregues", intake.q_delivered),
     metricRow("Abertos", intake.q_opened),
+    metricRow("Cliques", intake.q_clicks),
     metricRow("Respondidos", intake.q_replied),
     metricRow("Respostas positivas", intake.q_positive),
     metricRow("Reuniões agendadas", intake.q_meetings),
+    metricRow("Descadastros", intake.q_unsub),
     metricRow("Taxa de bounce", intake.q_bounce),
     metricRow("Taxa de reclamação de spam", intake.q_spam),
   ].join("\n");
@@ -278,6 +302,15 @@ export function buildUserPrompt(intake = {}, { mode = "auditoria" } = {}) {
       intake.infra,
     ),
   );
+
+  if (isRd || clean(intake.rdConfig)) {
+    partes.push(
+      field(
+        "Configuração na RD Station (autenticação de domínio, origem/validação da base, volume, frequência, régua de supressão)",
+        intake.rdConfig,
+      ),
+    );
+  }
 
   // Verificações DNS feitas pela própria ferramenta (evidência real, não relato)
   const dnsChecks = (Array.isArray(intake.dnsChecks) ? intake.dnsChecks : [])

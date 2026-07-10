@@ -73,6 +73,26 @@
           <button type="button" id="onboarding-dismiss" class="ghost small">Entendi, não mostrar de novo</button>
         </div>
 
+        <div class="panel scope-box mode-box">
+          <div class="scope-head">
+            <span class="sec-icon">🧩</span>
+            <div>
+              <p class="scope-title">Modo de operação</p>
+              <p class="hint scope-hint">Define como o avaliador julga infraestrutura, métricas e ativos. A plataforma escolhida é um dado — a análise otimiza <em>dentro</em> dela.</p>
+            </div>
+          </div>
+          <div class="mode-grid">
+            <label class="check mode-opt">
+              <input type="radio" name="opMode" value="cold" checked />
+              <span><strong>Cold outbound</strong><small>Prospecção fria com ferramenta de cold, domínios dedicados, sequências de email/WhatsApp.</small></span>
+            </label>
+            <label class="check mode-opt">
+              <input type="radio" name="opMode" value="rdstation" />
+              <span><strong>RD Station</strong><small>Operação na RD: leads na base, emails standalone, fluxos por estágio (atenção → consideração → decisão) e lead scoring.</small></span>
+            </label>
+          </div>
+        </div>
+
         <div class="panel scope-box">
           <div class="scope-head">
             <span class="sec-icon">🎯</span>
@@ -87,6 +107,7 @@
             <label class="check"><input type="checkbox" name="scope" value="emails" checked /><span>Emails</span></label>
             <label class="check"><input type="checkbox" name="scope" value="whatsapp" checked /><span>WhatsApp</span></label>
             <label class="check"><input type="checkbox" name="scope" value="prompt1a1" checked /><span>Prompt 1:1</span></label>
+            <label class="check rd-only"><input type="checkbox" name="scope" value="automacoes" checked /><span>Automações &amp; scoring</span></label>
             <label class="check"><input type="checkbox" name="scope" value="lp" checked /><span>Landing pages</span></label>
             <label class="check"><input type="checkbox" name="scope" value="metricas" checked /><span>Métricas &amp; infra</span></label>
           </div>
@@ -159,9 +180,9 @@
           </summary>
           <div class="sec-body">
             <label>
-              Sequência(s) de email — cole o copy real
-              <span class="hint">Cole os emails da sequência, na ordem. Inclua os assuntos.</span>
-              <textarea name="emailSeq" rows="7" placeholder="Assunto: …&#10;Email 1: …&#10;&#10;Assunto: …&#10;Email 2 (follow-up): …"></textarea>
+              Emails — sequências e/ou standalone (cole o copy real)
+              <span class="hint">Cole os emails na ordem: sequências de prospecção e/ou campanhas standalone. Inclua os assuntos e identifique cada um.</span>
+              <textarea name="emailSeq" rows="7" placeholder="Standalone — Assunto: …&#10;Corpo: …&#10;&#10;Sequência X, email 1 — Assunto: …&#10;Corpo: …"></textarea>
             </label>
             <label class="file-label">
               Ou importe planilha de emails enviados (.xlsx / .csv)
@@ -186,6 +207,36 @@
             <div id="sheet-whatsapp-status" class="sheet-status hidden">
               <span id="sheet-whatsapp-info"></span>
               <button type="button" id="sheet-whatsapp-remove" class="ghost small">✕ remover</button>
+            </div>
+
+            <div class="rd-only">
+              <hr class="sep" />
+              <label class="block-label">
+                Fluxos de automação por estágio (RD Station)
+                <span class="hint">Descreva cada fluxo: gatilho de entrada, emails (assunto + resumo ou copy), delays, condições e a saída. O avaliador audita o desenho da jornada, os critérios de transição entre estágios e a coerência oferta×estágio.</span>
+              </label>
+              <label>
+                🔵 Fluxo(s) de ATENÇÃO (topo)
+                <textarea name="flowAttention" rows="5" placeholder="Gatilho: lead importado da lista X…&#10;Email 1 (D0): assunto/copy…&#10;Email 2 (D+3): …&#10;Condição de avanço: clicou em qualquer link → Consideração"></textarea>
+              </label>
+              <label>
+                🟡 Fluxo(s) de CONSIDERAÇÃO (meio)
+                <textarea name="flowConsideration" rows="5" placeholder="Gatilho: veio do fluxo de atenção / atingiu N pontos…&#10;Emails, delays, condições…"></textarea>
+              </label>
+              <label>
+                🟢 Fluxo(s) de DECISÃO (fundo)
+                <textarea name="flowDecision" rows="5" placeholder="Gatilho: …&#10;Emails de oferta/agendamento, condições, saída para o comercial…"></textarea>
+              </label>
+              <label>
+                Racional da jornada
+                <span class="hint">Por que a jornada foi desenhada assim: critérios de transição entre estágios, tempo esperado, papel do standalone vs. fluxo, quando o lead vai para vendas.</span>
+                <textarea name="flowRationale" rows="4" placeholder="Ex.: lead importado entra em atenção; ao clicar 2x ou atingir 50 pontos passa a consideração…"></textarea>
+              </label>
+              <label>
+                Régua de lead scoring
+                <span class="hint">Critérios de perfil (fit) e de interesse (engajamento), pontos por ação, threshold de MQL e o que acontece quando o lead o atinge (notificação, dono, SLA, fluxo de decisão).</span>
+                <textarea name="leadScoring" rows="5" placeholder="Perfil: cargo diretor +20, setor-alvo +15…&#10;Interesse: abriu +1, clicou +5, visitou página de preços +15…&#10;MQL: 60 pontos → notifica vendas via…"></textarea>
+              </label>
             </div>
 
             <hr class="sep" />
@@ -263,6 +314,8 @@
               <label>Respondidos<input name="q_replied" type="text" inputmode="numeric" placeholder="0" /></label>
               <label>Respostas positivas<input name="q_positive" type="text" inputmode="numeric" placeholder="0" /></label>
               <label>Reuniões agendadas<input name="q_meetings" type="text" inputmode="numeric" placeholder="0" /></label>
+              <label>Cliques<input name="q_clicks" type="text" inputmode="numeric" placeholder="0" /></label>
+              <label>Descadastros<input name="q_unsub" type="text" inputmode="numeric" placeholder="0" /></label>
               <label>Taxa de bounce<input name="q_bounce" type="text" placeholder="Ex.: 4%" /></label>
               <label>Reclamação de spam<input name="q_spam" type="text" placeholder="Ex.: 0,2%" /></label>
             </div>
@@ -327,6 +380,12 @@
             </div>
             <span id="dns-status" class="hint dns-status"></span>
             <div id="dns-results"></div>
+
+            <label class="rd-only mt">
+              Configuração na RD Station
+              <span class="hint">Domínio de envio autenticado na RD (DKIM/SPF)? Origem e validação da base importada, volume/dia, frequência sobre o mesmo público, régua de supressão de inativos/bounces.</span>
+              <textarea name="rdConfig" rows="4" placeholder="Ex.: domínio autenticado na RD; base de 30k importada da prospecção, validada com NeverBounce; standalone 2x/semana; sem régua de supressão…"></textarea>
+            </label>
           </div>
         </details>
 

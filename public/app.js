@@ -716,6 +716,20 @@ function openWinnerModalPrefilled(content) {
   winnerForm.elements.title.focus();
 }
 
+// ---------- modo de operação (cold × RD Station) ----------
+function currentMode() {
+  return form.elements.opMode?.value || "cold";
+}
+
+function applyMode() {
+  document.body.dataset.mode = currentMode();
+  updateCounters();
+}
+
+for (const radio of form.querySelectorAll('input[name="opMode"]')) {
+  radio.addEventListener("change", applyMode);
+}
+
 // ---------- ajuda e onboarding ----------
 helpBtn.addEventListener("click", () => openModal(helpModal));
 
@@ -775,14 +789,30 @@ const BRIEF_ITEMS = [
   },
   {
     label: "infra/DNS",
-    filled: () => !!fieldVal("infra") || dnsChecks.length > 0,
+    filled: () =>
+      !!fieldVal("infra") || dnsChecks.length > 0 || !!fieldVal("rdConfig"),
+  },
+  {
+    label: "fluxos de automação",
+    only: "rdstation",
+    filled: () =>
+      !!fieldVal("flowAttention") ||
+      !!fieldVal("flowConsideration") ||
+      !!fieldVal("flowDecision") ||
+      !!fieldVal("flowRationale"),
+  },
+  {
+    label: "lead scoring",
+    only: "rdstation",
+    filled: () => !!fieldVal("leadScoring"),
   },
 ];
 
 function updateBriefProgress() {
-  const missing = BRIEF_ITEMS.filter((i) => !i.filled()).map((i) => i.label);
-  const done = BRIEF_ITEMS.length - missing.length;
-  const pct = Math.round((done / BRIEF_ITEMS.length) * 100);
+  const items = BRIEF_ITEMS.filter((i) => !i.only || i.only === currentMode());
+  const missing = items.filter((i) => !i.filled()).map((i) => i.label);
+  const done = items.length - missing.length;
+  const pct = Math.round((done / items.length) * 100);
   briefFill.style.width = `${pct}%`;
   briefFill.classList.toggle("full", pct === 100);
   if (pct === 100) {
@@ -865,7 +895,8 @@ function fillForm(intake) {
   dnsChecks = Array.isArray(intake.dnsChecks) ? intake.dnsChecks : [];
   renderDnsCards();
   dnsStatus.textContent = "";
-  updateCounters();
+  if (form.elements.opMode) form.elements.opMode.value = intake.opMode || "cold";
+  applyMode();
   autoOpenSections();
 }
 
@@ -1228,7 +1259,7 @@ function conversationMarkdown() {
 // ---------- inicialização ----------
 fillLps([{}]);
 loadClients();
-updateCounters();
+applyMode();
 syncToggleLabel();
 
 // ---------- markdown renderer (self-contained, sem dependências) ----------
