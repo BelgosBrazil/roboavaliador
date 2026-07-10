@@ -35,7 +35,8 @@ const SCOPE_LABELS = {
   prompt1a1: "Prompt de geração de conteúdo 1:1",
   automacoes: "Automações & lead scoring",
   lp: "Landing page",
-  metricas: "Métricas & infraestrutura",
+  metricas: "Métricas & medição",
+  infra: "Domínios, DNS & entregabilidade",
 };
 
 // ---------- blocos compostos ----------

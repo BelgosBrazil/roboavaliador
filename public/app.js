@@ -865,6 +865,7 @@ function collectIntake() {
   data.lps = collectLps();
   data.dispatchRows = collectRows();
   data.dnsChecks = dnsChecks;
+  data.scopeV = 2; // versão do formato de escopo (v2: métricas e infra separados)
   return data;
 }
 
@@ -876,8 +877,11 @@ function fillForm(intake) {
       el.value = value;
     }
   }
-  // escopo
-  const scope = Array.isArray(intake.scope) && intake.scope.length ? intake.scope : null;
+  // escopo (migração: no formato antigo, "metricas" incluía domínios/DNS)
+  let scope = Array.isArray(intake.scope) && intake.scope.length ? [...intake.scope] : null;
+  if (scope && !intake.scopeV && scope.includes("metricas") && !scope.includes("infra")) {
+    scope.push("infra");
+  }
   for (const cb of form.querySelectorAll('input[name="scope"]')) {
     cb.checked = scope ? scope.includes(cb.value) : true;
   }

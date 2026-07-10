@@ -48,7 +48,7 @@ O botão **Copiar / Baixar .md** exporta a conversa inteira (auditoria + iteraç
 
 **PDF por resposta:** cada resposta do avaliador tem seu próprio botão "PDF desta resposta" — exporte só o trecho aprovado da conversa, não a conversa inteira.
 
-**Auditoria completa ou por etapa:** no topo do formulário, o bloco **Escopo da auditoria** deixa você marcar o que o avaliador deve analisar (emails, WhatsApp, LP, prompt 1:1, lista, oferta, métricas/infra). Tudo marcado = fluxo completo do cliente; desmarque para validar só etapas. Mesmo com escopo restrito, se os dados mostrarem problema crítico numa camada acima do funil, o relatório inclui um alerta curto.
+**Auditoria completa ou por etapa:** no topo do formulário, o bloco **Escopo da auditoria** deixa você marcar o que o avaliador deve analisar (emails, WhatsApp, LP, prompt 1:1, automações, lista, oferta, métricas e — separadamente — domínios & DNS). Tudo marcado = fluxo completo do cliente; desmarque para validar só etapas. Mesmo com escopo restrito, se os dados mostrarem problema crítico numa camada acima do funil, o relatório inclui um alerta curto.
 
 **Planilha de emails enviados:** além de colar a sequência, você pode importar um **.xlsx ou .csv** com exemplos reais de emails — cada linha é um email, e vale tanto o email inteiro numa coluna quanto partes/parágrafos em colunas separadas (assunto, abertura, corpo, CTA…). O conteúdo entra na auditoria como evidência de copy.
 
