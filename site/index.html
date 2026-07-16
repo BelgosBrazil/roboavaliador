@@ -202,8 +202,8 @@ section { padding: 120px 0; position: relative; }
 .sec-head { display: flex; align-items: baseline; gap: 18px; margin-bottom: 60px; }
 .sec-head .idx { font-family: var(--mono); font-size: 12px; color: var(--acc-2); letter-spacing: .12em; }
 .sec-head h2 { font-size: clamp(32px, 4.4vw, 60px); font-weight: 800; letter-spacing: -.03em; }
-.sec-head .rule { flex: 1; height: 1px; background: var(--line); align-self: center; transform: scaleX(0); transform-origin: left; transition: transform 1.1s cubic-bezier(.22,1,.36,1) .2s; }
-.sec-head.in .rule { transform: scaleX(1); }
+.sec-head .rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--acc), var(--line) 42%, transparent 96%); align-self: center; transform: scaleX(0); transform-origin: left; transition: transform 1.1s cubic-bezier(.22,1,.36,1) .2s; }
+.sec-head.in .rule { transform: scaleX(1); box-shadow: 0 0 22px -2px var(--glow); }
 
 .rv { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(.22,1,.36,1), transform .8s cubic-bezier(.22,1,.36,1); }
 .rv.in { opacity: 1; transform: none; }
@@ -252,8 +252,14 @@ section { padding: 120px 0; position: relative; }
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* ---- cartões premium (tilt) ---- */
-.tiltcard { transform-style: preserve-3d; will-change: transform; }
+/* ---- cartões premium (tilt + brilho especular) ---- */
+.tiltcard { transform-style: preserve-3d; will-change: transform; position: relative; }
+.tiltcard .shine {
+  display: block; position: absolute; inset: 0; pointer-events: none; z-index: 6; opacity: 0; border-radius: inherit;
+  background: radial-gradient(340px circle at var(--gx, 50%) var(--gy, 50%), color-mix(in srgb, var(--acc) 16%, transparent), transparent 62%);
+  transition: opacity .35s ease;
+}
+.tiltcard:hover .shine { opacity: 1; }
 
 /* ---- motor 1:1 ---- */
 #motor .wrap { display: grid; grid-template-columns: 1fr 1.1fr; gap: 70px; align-items: start; }
@@ -271,7 +277,7 @@ section { padding: 120px 0; position: relative; }
   transition: all .3s ease;
 }
 .cockpit .chip.on { border-color: var(--acc); color: var(--acc-ink); }
-.cockpit .body { padding: 26px 24px; min-height: 300px; font-size: 16.5px; line-height: 1.75; }
+.cockpit .body { padding: 26px 24px; min-height: 380px; font-size: 16px; line-height: 1.72; }
 .cockpit .body .var { background: color-mix(in srgb, var(--acc) 18%, transparent); color: var(--acc-ink); border-radius: 4px; padding: 0 4px; font-weight: 500; }
 .cockpit .caret { display: inline-block; width: 2px; height: 1.1em; vertical-align: -0.18em; background: var(--acc-2); animation: blink 1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
@@ -282,17 +288,17 @@ section { padding: 120px 0; position: relative; }
 #agente .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 70px; align-items: center; }
 #agente h2 { font-size: clamp(32px, 4vw, 54px); font-weight: 800; letter-spacing: -.03em; margin-bottom: 22px; }
 #agente .col p { color: var(--ink-2); max-width: 48ch; margin-bottom: 14px; }
-#agente .feats { display: grid; gap: 14px; margin-top: 24px; }
-#agente .feat { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: baseline; }
-#agente .feat .fi { color: var(--green); font-weight: 600; }
-#agente .feat b { font-weight: 600; }
-#agente .feat span { color: var(--ink-2); font-size: 15.5px; }
+.feats { display: grid; gap: 14px; margin-top: 24px; }
+.feat { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: baseline; }
+.feat .fi { color: var(--green); font-weight: 600; }
+.feat b { font-weight: 600; color: var(--ink); }
+.feat span { color: var(--ink-2); font-size: 15.5px; }
 .chat {
   background: var(--card); border: 1px solid var(--line); border-radius: 16px;
   box-shadow: 0 40px 90px -40px rgba(0,0,0,.7), 0 0 60px -30px var(--glow); overflow: hidden;
 }
 .chat .chead { padding: 14px 20px; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; }
-.chat .cbody { padding: 22px 20px; display: flex; flex-direction: column; gap: 10px; min-height: 350px; }
+.chat .cbody { padding: 22px 20px; display: flex; flex-direction: column; gap: 10px; min-height: 430px; }
 .bub {
   max-width: 82%; padding: 11px 15px; border-radius: 14px; font-size: 15px; line-height: 1.5;
   opacity: 0; transform: translateY(10px) scale(.98); transition: all .4s cubic-bezier(.22,1,.36,1);
@@ -427,6 +433,129 @@ footer .cols { display: flex; justify-content: space-between; gap: 30px; flex-wr
 footer .cols a { border-bottom: 1px solid var(--line); }
 footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
 
+/* ---- handoff dentro do chat ---- */
+.handoff { margin: 4px 20px 20px; border: 1px dashed color-mix(in srgb, var(--acc) 45%, transparent); border-radius: 12px; padding: 14px 16px; opacity: 0; transform: translateY(12px); transition: all .55s cubic-bezier(.22,1,.36,1); }
+.handoff.on { opacity: 1; transform: none; }
+.handoff .ht { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--acc-ink); margin-bottom: 9px; }
+.handoff .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.handoff .tags span { font-size: 12.5px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; color: var(--ink-2); }
+.handoff .tags b { color: var(--ink); font-weight: 500; }
+
+/* ---- revops: agentes + sistema de receita ---- */
+#revops .intro {
+  font-family: var(--disp); font-weight: 650; font-size: clamp(24px, 3.4vw, 46px);
+  line-height: 1.16; letter-spacing: -.022em; max-width: 1020px;
+}
+#revops .intro .hl { background: linear-gradient(100deg, var(--acc-2), var(--acc)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#revops .sub-t { font-size: clamp(24px, 2.8vw, 36px); font-weight: 800; letter-spacing: -.025em; margin-bottom: 14px; }
+#revops .sub-p { color: var(--ink-2); max-width: 54ch; }
+
+.pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 64px; }
+.pillar {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 30px 26px 32px;
+  position: relative; overflow: hidden;
+  transition: transform .55s cubic-bezier(.22,1,.36,1), border-color .35s ease, box-shadow .35s ease;
+}
+.pillar::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--acc), transparent 70%); transform: scaleX(0); transform-origin: left; transition: transform .7s cubic-bezier(.22,1,.36,1); }
+.pillar:hover { transform: translateY(-7px); border-color: color-mix(in srgb, var(--acc) 45%, var(--line)); box-shadow: 0 34px 70px -34px rgba(0,0,0,.65), 0 0 46px -20px var(--glow); }
+.pillar:hover::before { transform: scaleX(1); }
+.pillar .pi { font-family: var(--mono); font-size: 11px; color: var(--acc-2); letter-spacing: .12em; }
+.pillar h3 { font-size: 21.5px; margin: 14px 0 10px; letter-spacing: -.015em; }
+.pillar > p { color: var(--ink-2); font-size: 15px; }
+.pillar ul { list-style: none; margin-top: 16px; display: grid; gap: 9px; border-top: 1px solid var(--line-soft); padding-top: 16px; }
+.pillar li { font-size: 14.5px; color: var(--ink-2); display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: baseline; }
+.pillar li i { color: var(--acc-2); font-style: normal; font-size: 11px; }
+.pillar li b { color: var(--ink); font-weight: 600; }
+
+#revops .board-wrap { display: grid; grid-template-columns: 1.06fr 1fr; gap: 70px; align-items: center; margin-top: 100px; }
+.ops {
+  background: #0b0b12; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--acc) 30%, transparent);
+  font-family: var(--mono); font-size: 12.5px; padding: 22px 22px 26px; height: 420px; overflow: hidden;
+  box-shadow: 0 40px 90px -40px rgba(0,0,0,.8), 0 0 70px -30px var(--glow);
+}
+.ops::before {
+  content: "operação ao vivo ◆ agentes belgos"; display: block; color: #6b6b80; font-size: 11px;
+  letter-spacing: .12em; text-transform: uppercase; border-bottom: 1px solid rgba(240,240,246,.12);
+  padding-bottom: 12px; margin-bottom: 10px;
+}
+.ops .row {
+  display: grid; grid-template-columns: 58px 96px 1fr; gap: 10px; align-items: baseline;
+  padding: 8px 0; border-bottom: 1px dashed rgba(240,240,246,.06); color: #c9c9da; line-height: 1.5;
+  opacity: 0; transform: translateY(10px); transition: opacity .45s ease, transform .45s cubic-bezier(.22,1,.36,1);
+}
+.ops .row.on { opacity: 1; transform: none; }
+.ops .tm { color: #6b6b80; font-size: 11px; }
+.ops .tag { font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; border: 1px solid; border-radius: 999px; padding: 2px 7px; text-align: center; white-space: nowrap; }
+.ops .tag.ag { color: #b9a4ff; border-color: rgba(167,139,255,.5); }
+.ops .tag.hu { color: #4ade9d; border-color: rgba(74,222,157,.5); }
+.ops .tag.si { color: #8d8da1; border-color: rgba(141,141,161,.4); }
+.ops .tx b { color: #f0f0f6; font-weight: 500; }
+
+.flow-wrap { margin-top: 26px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); padding: 26px 24px 18px; overflow-x: auto; }
+.flow-wrap .ft { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); margin: 0 2px 2px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.flow-wrap .ft .lg { color: var(--acc-2); }
+.flow-wrap svg { display: block; min-width: 880px; width: 100%; height: auto; }
+.flow-wrap .fbox { fill: var(--card-2); stroke: var(--line); }
+.flow-wrap .fbox.hot { stroke: color-mix(in srgb, var(--acc) 55%, transparent); }
+.flow-wrap .flab { font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; fill: var(--ink); text-transform: uppercase; }
+.flow-wrap .fsub { font-family: var(--text); font-size: 11px; fill: var(--ink-2); }
+.flow-wrap .fline { stroke: var(--line); stroke-width: 1.5; fill: none; }
+.flow-wrap .fret { stroke: color-mix(in srgb, var(--acc) 45%, transparent); stroke-width: 1.2; stroke-dasharray: 3 6; fill: none; }
+.flow-wrap .fretlab { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; fill: var(--acc-2); text-transform: uppercase; }
+.flow-wrap .fnode { opacity: 0; transform: translateY(12px); transition: opacity .6s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.22,1,.36,1); }
+.flow-wrap.in .fnode { opacity: 1; transform: none; }
+.flow-wrap.in .fnode:nth-of-type(2) { transition-delay: .14s; }
+.flow-wrap.in .fnode:nth-of-type(3) { transition-delay: .28s; }
+.flow-wrap.in .fnode:nth-of-type(4) { transition-delay: .42s; }
+.flow-wrap.in .fnode:nth-of-type(5) { transition-delay: .56s; }
+
+.ladder { margin-top: 100px; }
+.ladder .track { position: relative; margin-top: 52px; }
+.ladder .bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ladder .seg { height: 7px; border-radius: 99px; background: var(--line-soft); overflow: hidden; }
+.ladder .seg i { display: block; height: 100%; background: linear-gradient(90deg, color-mix(in srgb, var(--acc) 55%, transparent), var(--acc)); transform: scaleX(0); transform-origin: left; transition: transform .8s cubic-bezier(.22,1,.36,1); box-shadow: 0 0 16px var(--glow); }
+.ladder.in .seg:nth-child(1) i { transform: scaleX(1); }
+.ladder.in .seg:nth-child(2) i { transform: scaleX(1); transition-delay: .5s; }
+.ladder.in .seg:nth-child(3) i { transform: scaleX(1); transition-delay: 1s; }
+.ladder.in .seg:nth-child(4) i { transform: scaleX(1); transition-delay: 1.5s; }
+.ladder .pin {
+  position: absolute; left: 26%; top: -36px; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; color: var(--acc-ink); white-space: nowrap;
+  opacity: 0; transition: opacity .6s ease 1.1s;
+}
+.ladder .pin::after { content: ""; position: absolute; left: 50%; top: 16px; width: 1px; height: 16px; background: var(--acc); }
+.ladder.in .pin { opacity: 1; }
+.ladder .pin .pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--acc); margin-right: 7px; position: relative; top: -1px; animation: pinp 2.2s infinite; }
+@keyframes pinp { 0% { box-shadow: 0 0 0 0 var(--glow); } 70% { box-shadow: 0 0 0 12px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.ladder .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 26px; margin-top: 22px; }
+.ladder .stp { opacity: 0; transform: translateY(14px); transition: all .7s cubic-bezier(.22,1,.36,1); }
+.ladder.in .stp { opacity: 1; transform: none; }
+.ladder.in .stp:nth-child(2) { transition-delay: .5s; }
+.ladder.in .stp:nth-child(3) { transition-delay: 1s; }
+.ladder.in .stp:nth-child(4) { transition-delay: 1.5s; }
+.ladder .stp .m { font-family: var(--mono); font-size: 11px; color: var(--acc-2); letter-spacing: .12em; }
+.ladder .stp b { display: block; font-size: 18px; font-weight: 700; letter-spacing: -.01em; margin: 8px 0 6px; }
+.ladder .stp p { color: var(--ink-2); font-size: 14.5px; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 44px; }
+.kpi { border: 1px solid var(--line); border-radius: 16px; padding: 26px 24px 24px; background: var(--card); position: relative; overflow: hidden; transition: border-color .3s ease, transform .5s cubic-bezier(.22,1,.36,1); }
+.kpi:hover { border-color: color-mix(in srgb, var(--acc) 40%, var(--line)); transform: translateY(-5px); }
+.kpi .num { font-family: var(--disp); font-weight: 800; font-size: clamp(34px, 3.4vw, 50px); letter-spacing: -.03em; line-height: 1; display: block; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+.kpi .num .u { color: var(--acc-2); }
+.kpi p { color: var(--ink-2); font-size: 14.5px; }
+.kpi::after { content: "◆"; position: absolute; right: 18px; top: 16px; color: color-mix(in srgb, var(--acc) 35%, transparent); font-size: 12px; }
+
+/* ---- cta: letras magnéticas ---- */
+#cta h2 .wd { display: inline-block; white-space: nowrap; }
+#cta h2 .ch { display: inline-block; will-change: transform; }
+
+/* ---- footer: farol no wordmark ---- */
+footer .word.lit {
+  color: transparent;
+  background: radial-gradient(260px 150px at var(--fx, 50%) 55%, var(--acc-2), color-mix(in srgb, var(--acc) 35%, transparent) 48%, transparent 72%);
+  -webkit-background-clip: text; background-clip: text;
+}
+
 /* ============ CURSOR ============ */
 #cur, #curRing { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 300; border-radius: 50%; }
 #cur { width: 8px; height: 8px; background: var(--acc-2); transform: translate(-50%, -50%); }
@@ -448,7 +577,16 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   .check-row .st { display: none; }
   .prac-row { grid-template-columns: 1fr; }
   .prac-row .ptag { justify-self: start; order: -1; }
+  .pillars { grid-template-columns: 1fr; }
+  #revops .board-wrap { grid-template-columns: 1fr; gap: 40px; }
+  .ops { height: 380px; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .ladder .bar, .ladder .steps { grid-template-columns: 1fr 1fr; }
+  .ladder .pin { display: none; }
   section { padding: 88px 0; }
+}
+@media (max-width: 1140px) and (min-width: 981px) {
+  .nav-links a[href="#revops"] { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; }
@@ -473,6 +611,7 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   <div class="nav-links">
     <a href="#como">Como funciona</a>
     <a href="#produtos">Produtos</a>
+    <a href="#revops">Agentes &amp; RevOps</a>
     <a href="#robo">Roboavaliador</a>
     <a href="#cta">Contato</a>
     <button id="themeBtn" title="alternar tema" aria-label="alternar tema">◐</button>
@@ -525,6 +664,8 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
     <span>PRÉ-VOO GO/NO-GO</span><span class="dia">◆</span>
     <span>AGENTES DE IA</span><span class="dia">◆</span>
     <span>REVOPS</span><span class="dia">◆</span>
+    <span>FORECAST CONFIÁVEL</span><span class="dia">◆</span>
+    <span>GOVERNANÇA HUMANA</span><span class="dia">◆</span>
   </div>
 </div>
 
@@ -543,7 +684,7 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   <div class="container">
     <div class="sec-head rv">
       <span class="idx">01</span>
-      <h2>Como a IA encontra seus melhores clientes</h2>
+      <h2 class="scr">Como a IA encontra seus melhores clientes</h2>
       <div class="rule"></div>
     </div>
     <p class="rv" style="max-width:62ch; color:var(--ink-2); margin-bottom:56px">Quatro etapas, na ordem, como uma contagem regressiva. Nada dispara sem a etapa anterior estar armada.</p>
@@ -576,7 +717,7 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   <div class="container wrap">
     <div class="sticky">
       <div class="sec-head" style="margin-bottom:26px"><span class="idx">02</span><div class="rule" style="max-width:60px"></div></div>
-      <h2>Conteúdo ultra personalizado, lead a lead.</h2>
+      <h2 class="scr">Conteúdo ultra personalizado, lead a lead.</h2>
       <p>Personalização de verdade não é {primeiro_nome}. A nossa IA lê o contexto de cada lead, cruza com o conhecimento do seu negócio e escreve uma mensagem que só faz sentido para aquela pessoa.</p>
       <p>Relevância cirúrgica em escala, com cada prompt de geração auditado e melhorado em ciclo contínuo.</p>
     </div>
@@ -592,7 +733,7 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   <div class="container wrap">
     <div class="col">
       <div class="sec-head" style="margin-bottom:26px"><span class="idx">03</span><div class="rule" style="max-width:60px"></div></div>
-      <h2>Deixe a IA conversar com seus leads antes do seu time.</h2>
+      <h2 class="scr">Deixe a IA conversar com seus leads antes do seu time.</h2>
       <p>Nosso agente inteligente faz a triagem inicial, identifica interesse real e envia ao comercial apenas quem está pronto para comprar. Menos ruído, mais conversas que viram contrato.</p>
       <div class="feats">
         <div class="feat"><span class="fi">✓</span><span><b>Parece humano.</b> <span>Delay nas respostas e linguagem natural em cada conversa.</span></span></div>
@@ -603,6 +744,16 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
     <div class="chat rv tiltcard" id="chat">
       <div class="chead"><span class="mono">agente belgos ai ◆ ao vivo</span><span class="mono" style="color:var(--green)">online</span></div>
       <div class="cbody" id="chatBody"></div>
+      <div class="handoff" id="handoff">
+        <div class="ht">handoff para o vendedor ◆ contexto completo</div>
+        <div class="tags">
+          <span>decisor: <b>confirmado ✓</b></span>
+          <span>dor: <b>vendedor prospectando</b></span>
+          <span>meta: <b>12 reuniões/mês</b></span>
+          <span>janela: <b>este trimestre</b></span>
+          <span>próximo passo: <b>demo qui 10:30</b></span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -612,7 +763,7 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
     <div class="console rv tiltcard" id="console" aria-label="simulação do pré-voo do Roboavaliador"></div>
     <div>
       <div class="sec-head" style="margin-bottom:26px"><span class="idx">04</span><div class="rule" style="max-width:60px"></div></div>
-      <h2>Roboavaliador: a auditoria que voa na frente</h2>
+      <h2 class="scr">Roboavaliador: a auditoria que voa na frente</h2>
       <p>Nossa IA proprietária audita cada campanha de ponta a ponta antes do primeiro disparo e a cada ciclo: infraestrutura, lista, oferta, copy, landing page e medição.</p>
       <p>Riscos ranqueados, causa raiz de cada gargalo e correções prontas. A sua campanha só decola com GO.</p>
       <div class="chips">
@@ -626,7 +777,7 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   <div class="container">
     <div class="sec-head rv">
       <span class="idx">05</span>
-      <h2>Produtos</h2>
+      <h2 class="scr">Produtos</h2>
       <div class="rule"></div>
     </div>
     <p class="rv" style="max-width:62ch; color:var(--ink-2); margin-bottom:56px">Cinco frentes, um único resultado: crescimento previsível.</p>
@@ -663,17 +814,137 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
       <div>
         <h3>Agentes de IA e RevOps</h3>
         <p>Agentes sob medida que executam trabalho de verdade nos seus sistemas, e receita como sistema: CRM arrumado, funil instrumentado e automações sob demanda. O Roboavaliador nasceu assim. O próximo agente pode ser seu.</p>
+        <a class="link-arrow" href="#revops" style="display:inline-block; margin-top:14px">ver a prática completa ↓</a>
       </div>
       <span class="ptag hot">agentic solutions</span>
     </div>
   </div>
 </section>
 
-<section id="fit">
+<section id="revops">
   <div class="container">
     <div class="sec-head rv">
       <span class="idx">06</span>
-      <h2>Essa solução é para você?</h2>
+      <h2 class="scr">Agentes de IA e RevOps</h2>
+      <div class="rule"></div>
+    </div>
+    <p class="intro rv">Receita não é um departamento. <span class="hl">É um sistema.</span> A gente constrói os dois lados dele: <span class="hl">agentes que executam trabalho de verdade</span> nos seus sistemas e a engenharia de operações que torna o número confiável.</p>
+
+    <div class="pillars rv">
+      <div class="pillar">
+        <span class="pi">AG ◆ 01</span>
+        <h3>Agentes que executam</h3>
+        <p>Não é chatbot de FAQ. São agentes com acesso governado aos seus sistemas: leem o contexto, decidem dentro do playbook e registram cada ação que tomam.</p>
+        <ul>
+          <li><i>◆</i><span><b>SDR digital:</b> pesquisa a conta, escreve 1:1 e agenda</span></li>
+          <li><i>◆</i><span><b>Auditor de campanha:</b> o Roboavaliador nasceu aqui</span></li>
+          <li><i>◆</i><span><b>Copiloto de CRM:</b> higiene, dedupe e roteamento</span></li>
+        </ul>
+      </div>
+      <div class="pillar">
+        <span class="pi">RV ◆ 02</span>
+        <h3>Receita instrumentada</h3>
+        <p>RevOps de verdade começa arrumando a casa: dado confiável, funil com dono e critério escrito de passagem em cada etapa. Sem isso, dashboard é decoração.</p>
+        <ul>
+          <li><i>◆</i><span><b>CRM como fonte única</b> da verdade comercial</span></li>
+          <li><i>◆</i><span><b>Funil com critérios</b> de entrada e saída por etapa</span></li>
+          <li><i>◆</i><span><b>Forecast que a diretoria</b> assina embaixo</span></li>
+        </ul>
+      </div>
+      <div class="pillar">
+        <span class="pi">GV ◆ 03</span>
+        <h3>Governança de gente grande</h3>
+        <p>Autonomia com limite escrito. Cada agente opera com permissão mínima, aprovação humana nos pontos críticos e trilha de auditoria completa. LGPD by design.</p>
+        <ul>
+          <li><i>◆</i><span><b>Human-in-the-loop</b> nos envios sensíveis</span></li>
+          <li><i>◆</i><span><b>Log imutável</b> de cada ação executada</span></li>
+          <li><i>◆</i><span><b>Permissões por escopo,</b> revisadas a cada ciclo</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="ops rv tiltcard" id="ops" aria-label="log de operação dos agentes"></div>
+      <div class="rv">
+        <h3 class="sub-t">Trabalho de verdade deixa trilha.</h3>
+        <p class="sub-p">A régua para chamar algo de agente aqui é alta: ele precisa executar tarefas nos seus sistemas, com contexto do seu negócio, e provar cada passo. Ao lado, o formato real do nosso log de operação: quem fez, o que fez, quem aprovou.</p>
+        <p class="sub-p" style="margin-top:14px">Quando um agente erra, o log mostra exatamente onde. Quando acerta, o padrão vira playbook versionado. A operação melhora a cada ciclo sem depender da memória de ninguém.</p>
+        <div class="feats">
+          <div class="feat"><span class="fi">✓</span><span><b>Aprovação humana onde importa.</b> <span>Envios sensíveis só saem com assinatura.</span></span></div>
+          <div class="feat"><span class="fi">✓</span><span><b>Cada ação com evidência.</b> <span>Quem fez, quando fez e com base em quê.</span></span></div>
+          <div class="feat"><span class="fi">✓</span><span><b>Aprendizado vira playbook.</b> <span>O que funciona é versionado e replicado.</span></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-wrap rv">
+      <div class="ft"><span>a esteira de um agente belgos</span><span class="lg">loop de melhoria contínua ◆ ao vivo</span></div>
+      <svg id="flowSvg" viewBox="0 0 1000 232" role="img" aria-label="fluxo do agente: sinal, decisão, ação no sistema, log auditável, aprendizado que volta para o playbook">
+        <path class="fline" id="fMain" d="M 60 96 H 940" />
+        <path class="fret" id="fRet" d="M 900 130 C 900 205, 100 205, 100 130" />
+        <text class="fretlab" x="500" y="193" text-anchor="middle">aprendizado volta para o playbook</text>
+        <g id="fPk"></g>
+        <g class="fnode">
+          <rect class="fbox" x="28" y="64" width="144" height="64" rx="12" />
+          <text class="flab" x="100" y="92" text-anchor="middle">sinal</text>
+          <text class="fsub" x="100" y="110" text-anchor="middle">intenção real, não lista fria</text>
+        </g>
+        <g class="fnode">
+          <rect class="fbox" x="228" y="64" width="144" height="64" rx="12" />
+          <text class="flab" x="300" y="92" text-anchor="middle">decisão</text>
+          <text class="fsub" x="300" y="110" text-anchor="middle">playbook + contexto da conta</text>
+        </g>
+        <g class="fnode">
+          <rect class="fbox hot" x="428" y="64" width="144" height="64" rx="12" />
+          <text class="flab" x="500" y="92" text-anchor="middle">ação</text>
+          <text class="fsub" x="500" y="110" text-anchor="middle">CRM, email, WhatsApp</text>
+        </g>
+        <g class="fnode">
+          <rect class="fbox" x="628" y="64" width="144" height="64" rx="12" />
+          <text class="flab" x="700" y="92" text-anchor="middle">log</text>
+          <text class="fsub" x="700" y="110" text-anchor="middle">cada passo auditável</text>
+        </g>
+        <g class="fnode">
+          <rect class="fbox" x="828" y="64" width="144" height="64" rx="12" />
+          <text class="flab" x="900" y="92" text-anchor="middle">aprendizado</text>
+          <text class="fsub" x="900" y="110" text-anchor="middle">vira playbook novo</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="ladder rv" id="ladder">
+      <h3 class="sub-t" style="margin-top:0">Onde a sua operação está hoje</h3>
+      <p class="sub-p">A gente encontra o degrau real, sem julgamento, e sobe um por vez. Maturidade não é slide: é o que o seu funil aguenta provar.</p>
+      <div class="track">
+        <span class="pin"><span class="pulse"></span>a maioria das operações B2B vive aqui</span>
+        <div class="bar">
+          <div class="seg"><i></i></div><div class="seg"><i></i></div><div class="seg"><i></i></div><div class="seg"><i></i></div>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="stp"><span class="m">M1 ◆ heróica</span><b>Esforço individual</b><p>Planilha, memória e heroísmo. O número do mês é uma surpresa para todo mundo.</p></div>
+        <div class="stp"><span class="m">M2 ◆ instrumentada</span><b>Funil que prova</b><p>CRM confiável, etapas com critério e gargalo visível. A conversa sai do achismo e vira dado.</p></div>
+        <div class="stp"><span class="m">M3 ◆ automatizada</span><b>Rotina sem fricção</b><p>Cadências e tarefas repetitivas rodando sozinhas, com alertas de desvio antes do estrago.</p></div>
+        <div class="stp"><span class="m">M4 ◆ agentic</span><b>Sistema que aprende</b><p>Agentes executando com governança, playbooks versionados e forecast que se sustenta.</p></div>
+      </div>
+    </div>
+
+    <div class="kpis rv" id="kpis">
+      <div class="kpi"><span class="num"><span data-kcount="4">0</span><span class="u">x</span></span><p>de cobertura de pipeline sobre a meta, acompanhada como número vivo</p></div>
+      <div class="kpi"><span class="num"><span class="u">&lt;</span><span data-kcount="10">0</span><span class="u">%</span></span><p>de desvio entre forecast e fechamento, medido ciclo a ciclo</p></div>
+      <div class="kpi"><span class="num"><span data-kcount="100">0</span><span class="u">%</span></span><p>das ações de agente com log, evidência e responsável</p></div>
+      <div class="kpi"><span class="num"><span data-kcount="24">0</span><span class="u">/7</span></span><p>de operação rodando, com aprovação humana nos pontos críticos</p></div>
+    </div>
+
+    <p class="result-line rv" style="margin-top:56px">Resultado: <em>um sistema de receita auditável</em> que melhora a cada ciclo. <a class="link-arrow" href="https://wa.me/5511961694033?text=Ol%C3%A1!%20Quero%20agentes%20de%20IA%20e%20RevOps%20na%20minha%20opera%C3%A7%C3%A3o." style="font-size:13px; margin-left:10px; white-space:nowrap">quero isso na minha operação →</a></p>
+  </div>
+</section>
+
+<section id="fit">
+  <div class="container">
+    <div class="sec-head rv">
+      <span class="idx">07</span>
+      <h2 class="scr">Essa solução é para você?</h2>
       <div class="rule"></div>
     </div>
     <div class="fit-grid rv">
@@ -702,8 +973,8 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
 <section id="processo">
   <div class="container">
     <div class="sec-head rv">
-      <span class="idx">07</span>
-      <h2>Como a gente começa</h2>
+      <span class="idx">08</span>
+      <h2 class="scr">Como a gente começa</h2>
       <div class="rule"></div>
     </div>
     <div class="grid rv">
@@ -732,8 +1003,8 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
 <section id="difs">
   <div class="container">
     <div class="sec-head rv">
-      <span class="idx">08</span>
-      <h2>Por que empresas B2B estão migrando</h2>
+      <span class="idx">09</span>
+      <h2 class="scr">Por que empresas B2B estão migrando</h2>
       <div class="rule"></div>
     </div>
     <div class="dif-grid rv">
@@ -872,75 +1143,200 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
     rail.classList.toggle("at-go", pr > 0.96);
   }, { passive: true });
 
-  /* ---------- radar ---------- */
+  /* ---------- globo 3D de sinais ---------- */
   const cv = document.getElementById("radar");
   const cx = cv.getContext("2d");
   let W, H, DPR;
-  const blips = Array.from({ length: 26 }, () => ({
-    a: Math.random() * Math.PI * 2, r: 0.18 + Math.random() * 0.75, ping: 0,
-  }));
-  let sweep = -Math.PI / 2, mx = 0.5, my = 0.5;
-  function sizeRadar() {
+  const isMob = matchMedia("(max-width: 980px)").matches;
+  function sizeGlobe() {
     DPR = Math.min(devicePixelRatio || 1, 2);
     W = cv.clientWidth; H = cv.clientHeight;
     cv.width = W * DPR; cv.height = H * DPR;
     cx.setTransform(DPR, 0, 0, DPR, 0, 0);
   }
-  sizeRadar(); addEventListener("resize", sizeRadar);
-  addEventListener("pointermove", (e) => { mx = e.clientX / innerWidth; my = e.clientY / innerHeight; }, { passive: true });
-  function ink(alpha) {
-    return isDark() ? `rgba(240,240,246,${alpha})` : `rgba(13,13,21,${alpha})`;
+  sizeGlobe(); addEventListener("resize", sizeGlobe);
+
+  // esfera de Fibonacci: o mercado inteiro como campo de sinais
+  const GA = Math.PI * (3 - Math.sqrt(5));
+  const NPT = isMob ? 340 : 720;
+  const pts = [];
+  for (let i = 0; i < NPT; i++) {
+    const py = 1 - (i / (NPT - 1)) * 2, pr = Math.sqrt(Math.max(0, 1 - py * py)), th = GA * i;
+    pts.push({ x: Math.cos(th) * pr, y: py, z: Math.sin(th) * pr, tgt: i % 24 === 5, ping: 0 });
   }
-  function drawRadar() {
+  const wires = [];
+  for (let m = 0; m < 6; m++) {
+    const arr = [], a0 = (m / 6) * Math.PI;
+    for (let s = 0; s <= 60; s++) {
+      const t = (s / 60) * Math.PI * 2;
+      arr.push([Math.cos(t) * Math.cos(a0), Math.sin(t), Math.cos(t) * Math.sin(a0)]);
+    }
+    wires.push(arr);
+  }
+  for (const lat of [-0.66, -0.33, 0, 0.33, 0.66]) {
+    const arr = [], pr = Math.sqrt(1 - lat * lat);
+    for (let s = 0; s <= 60; s++) {
+      const t = (s / 60) * Math.PI * 2;
+      arr.push([Math.cos(t) * pr, lat, Math.sin(t) * pr]);
+    }
+    wires.push(arr);
+  }
+  const tgts = pts.filter((p) => p.tgt);
+  const arcs = Array.from({ length: isMob ? 3 : 5 }, (_, i) => ({
+    a: tgts[(i * 5) % tgts.length], b: tgts[(i * 9 + 4) % tgts.length],
+    t: Math.random(), sp: 0.0022 + Math.random() * 0.002,
+  }));
+  const RT = 0.5, RR = 1.42;
+  const sats = [{ t: 0, sp: 0.0016 }, { t: 0.37, sp: 0.0011 }, { t: 0.72, sp: 0.0021 }];
+  const dust = Array.from({ length: isMob ? 24 : 60 }, () => ({
+    x: Math.random(), y: Math.random(), s: 0.4 + Math.random() * 1.3, v: 0.00016 + Math.random() * 0.0004,
+  }));
+
+  let rotY = 0, yawOff = 0, tilt = -0.34, yawT = 0, tiltT = -0.34, sweep = 0, gvel = 0, lastGY = scrollY;
+  addEventListener("pointermove", (e) => {
+    yawT = (e.clientX / innerWidth - 0.5) * 0.7;
+    tiltT = -0.34 + (e.clientY / innerHeight - 0.5) * 0.45;
+  }, { passive: true });
+
+  function rot(p) {
+    const yaw = rotY + yawOff, cyw = Math.cos(yaw), syw = Math.sin(yaw);
+    const cti = Math.cos(tilt), sti = Math.sin(tilt);
+    const x1 = p[0] * cyw + p[2] * syw, z1 = -p[0] * syw + p[2] * cyw;
+    return [x1, p[1] * cti - z1 * sti, p[1] * sti + z1 * cti];
+  }
+  function ink(a) { return isDark() ? `rgba(240,240,246,${a})` : `rgba(13,13,21,${a})`; }
+  function acc(a) { return isDark() ? `rgba(167,139,255,${a})` : `rgba(106,72,245,${a})`; }
+  function slerp(a, b, t) {
+    const d = Math.max(-1, Math.min(1, a.x * b.x + a.y * b.y + a.z * b.z));
+    const th = Math.acos(d) || 1e-4, s = Math.sin(th) || 1e-4;
+    const k1 = Math.sin((1 - t) * th) / s, k2 = Math.sin(t * th) / s;
+    return [a.x * k1 + b.x * k2, a.y * k1 + b.y * k2, a.z * k1 + b.z * k2];
+  }
+  function ringPt(t) { return [Math.cos(t) * RR, -Math.sin(t) * RR * Math.sin(RT), Math.sin(t) * RR * Math.cos(RT)]; }
+  const PERSP = 3.6;
+  function proj(p, ox, oy, R) {
+    const [x, y, z] = rot(p), s = PERSP / (PERSP - z);
+    return [ox + x * R * s, oy + y * R * s, z, s];
+  }
+
+  function drawGlobe() {
+    if (!reduced) requestAnimationFrame(drawGlobe);
+    if (document.hidden || scrollY > innerHeight * 1.25) return;
     cx.clearRect(0, 0, W, H);
-    const ox = W * (0.80 + (mx - 0.5) * 0.03), oy = H * (0.30 + (my - 0.5) * 0.03);
-    const R = Math.min(W, H) * 0.78;
+    const dyv = scrollY - lastGY; lastGY = scrollY;
+    gvel += (Math.abs(dyv) - gvel) * 0.08;
+    rotY += 0.0018 + Math.min(gvel * 0.00012, 0.004); // o scroll acelera o tempo do globo
+    yawOff += (yawT - yawOff) * 0.045;
+    tilt += (tiltT - tilt) * 0.045;
+    sweep += 0.011;
+
+    const ox = W * (isMob ? 0.66 : 0.74), oy = H * (isMob ? 0.30 : 0.40);
+    const R = Math.min(W, H) * (isMob ? 0.30 : 0.36);
+
+    // poeira em drift
+    dust.forEach((d) => {
+      d.y -= d.v; if (d.y < -0.02) d.y = 1.02;
+      cx.fillStyle = ink(0.10);
+      cx.fillRect(d.x * W, d.y * H, d.s, d.s);
+    });
+
+    // wireframe com profundidade
     cx.lineWidth = 1;
-    for (let i = 1; i <= 4; i++) {
-      cx.beginPath(); cx.arc(ox, oy, (R * i) / 4, 0, Math.PI * 2);
-      cx.strokeStyle = ink(0.10 - i * 0.012); cx.stroke();
+    wires.forEach((w) => {
+      let px = 0, pyy = 0, first = true;
+      w.forEach((p) => {
+        const [X, Y, z] = proj(p, ox, oy, R);
+        if (!first) {
+          cx.strokeStyle = ink(0.026 + 0.075 * ((z + 1) / 2));
+          cx.beginPath(); cx.moveTo(px, pyy); cx.lineTo(X, Y); cx.stroke();
+        }
+        px = X; pyy = Y; first = false;
+      });
+    });
+
+    // anel orbital + satélites com rastro
+    let rpx = 0, rpy = 0, rfirst = true;
+    for (let s = 0; s <= 90; s++) {
+      const [X, Y, z] = proj(ringPt((s / 90) * Math.PI * 2), ox, oy, R);
+      if (!rfirst) {
+        cx.strokeStyle = acc(0.05 + 0.10 * ((z + 1) / 2));
+        cx.beginPath(); cx.moveTo(rpx, rpy); cx.lineTo(X, Y); cx.stroke();
+      }
+      rpx = X; rpy = Y; rfirst = false;
     }
-    cx.beginPath(); cx.moveTo(ox - R, oy); cx.lineTo(ox + R, oy);
-    cx.moveTo(ox, oy - R); cx.lineTo(ox, oy + R);
-    cx.strokeStyle = ink(0.07); cx.stroke();
-    if (!reduced) sweep += 0.0045;
-    const grad = cx.createConicGradient ? cx.createConicGradient(sweep, ox, oy) : null;
-    if (grad) {
-      grad.addColorStop(0, "rgba(122,92,255,.16)");
-      grad.addColorStop(0.08, "rgba(122,92,255,0)");
-      grad.addColorStop(1, "rgba(122,92,255,0)");
-      cx.fillStyle = grad;
-      cx.beginPath(); cx.moveTo(ox, oy); cx.arc(ox, oy, R, 0, Math.PI * 2); cx.fill();
-    }
-    blips.forEach((b) => {
-      const x = ox + Math.cos(b.a) * b.r * R, y = oy + Math.sin(b.a) * b.r * R;
-      const da = ((b.a - sweep) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-      if (da < 0.05) b.ping = 1;
-      b.ping *= 0.985;
-      cx.beginPath(); cx.arc(x, y, 2, 0, Math.PI * 2);
-      cx.fillStyle = ink(0.32); cx.fill();
-      if (b.ping > 0.02) {
-        cx.beginPath(); cx.arc(x, y, 2 + (1 - b.ping) * 16, 0, Math.PI * 2);
-        cx.strokeStyle = `rgba(167,139,255,${b.ping * 0.65})`; cx.stroke();
+    sats.forEach((st) => {
+      st.t += st.sp;
+      for (let k = 0; k < 4; k++) {
+        const [X, Y, z] = proj(ringPt((st.t - k * 0.008) * Math.PI * 2), ox, oy, R);
+        cx.beginPath(); cx.arc(X, Y, k ? 1.1 : 2, 0, Math.PI * 2);
+        cx.fillStyle = acc((k ? 0.25 - k * 0.05 : 0.9) * (0.45 + 0.55 * ((z + 1) / 2)));
+        cx.fill();
       }
     });
-    if (!reduced) requestAnimationFrame(drawRadar);
+
+    // pontos: mercado + alvos pingando na varredura
+    pts.forEach((p) => {
+      const [X, Y, z, s] = proj([p.x, p.y, p.z], ox, oy, R);
+      const depth = (z + 1) / 2;
+      if (p.tgt) {
+        const lon = Math.atan2(p.z, p.x);
+        const da = ((lon - sweep) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        if (da < 0.09) p.ping = 1;
+        p.ping *= 0.975;
+        cx.beginPath(); cx.arc(X, Y, 1.5 + depth * 1.7, 0, Math.PI * 2);
+        cx.fillStyle = acc(0.35 + depth * 0.6); cx.fill();
+        if (p.ping > 0.03 && z > -0.3) {
+          cx.beginPath(); cx.arc(X, Y, 3 + (1 - p.ping) * 20 * s, 0, Math.PI * 2);
+          cx.strokeStyle = acc(p.ping * 0.7); cx.stroke();
+        }
+      } else {
+        cx.beginPath(); cx.arc(X, Y, 0.7 + depth * 1.1, 0, Math.PI * 2);
+        cx.fillStyle = ink(0.05 + depth * 0.30); cx.fill();
+      }
+    });
+
+    // arcos de conexão com cometa
+    arcs.forEach((A) => {
+      A.t += A.sp; if (A.t > 1.25) A.t = -0.25;
+      const segs = 26;
+      cx.lineWidth = 1.3;
+      for (let i = 0; i < segs; i++) {
+        const t0 = i / segs, rel = A.t - t0;
+        if (rel < 0 || rel > 0.38) continue;
+        const t1 = (i + 1) / segs;
+        const l0 = 1 + Math.sin(Math.PI * t0) * 0.3, l1 = 1 + Math.sin(Math.PI * t1) * 0.3;
+        const q0 = slerp(A.a, A.b, t0).map((v) => v * l0);
+        const q1 = slerp(A.a, A.b, t1).map((v) => v * l1);
+        const [X0, Y0, z0] = proj(q0, ox, oy, R);
+        const [X1, Y1] = proj(q1, ox, oy, R);
+        cx.strokeStyle = acc((1 - rel / 0.38) * 0.55 * (0.35 + 0.65 * ((z0 + 1) / 2)));
+        cx.beginPath(); cx.moveTo(X0, Y0); cx.lineTo(X1, Y1); cx.stroke();
+      }
+      cx.lineWidth = 1;
+      if (A.t >= 0 && A.t <= 1) {
+        const lf = 1 + Math.sin(Math.PI * A.t) * 0.3;
+        const q = slerp(A.a, A.b, A.t).map((v) => v * lf);
+        const [X, Y] = proj(q, ox, oy, R);
+        cx.beginPath(); cx.arc(X, Y, 2.2, 0, Math.PI * 2);
+        cx.fillStyle = acc(0.95); cx.fill();
+      }
+    });
   }
-  requestAnimationFrame(drawRadar);
+  requestAnimationFrame(drawGlobe);
 
   /* ---------- cockpit 1:1 ---------- */
   const leads = [
     {
-      chips: ["Mariana Duarte", "sócia-administradora", "Duarte & Camargo", "dor: horas não faturadas"],
-      html: `Mariana, vi que a <b class="var">Duarte &amp; Camargo</b> dobrou o contencioso trabalhista no último ano. Em escritórios nesse ritmo, o que costuma vazar primeiro é <b class="var">hora não faturada</b>: o advogado trabalha, o registro não acompanha.<br/><br/>Fizemos um diagnóstico de 30 minutos que mostra quantas horas por advogado o escritório recupera por mês. Faz sentido te mandar <b class="var">dois horários</b>?`,
+      chips: ["Mariana Duarte ◆ sócia", "Duarte & Camargo ◆ 34 advogados", "sinal: 2 vagas trabalhistas abertas", "fonte: diários oficiais + vagas"],
+      html: `Mariana, cruzei dois dados públicos sobre a <b class="var">Duarte &amp; Camargo</b>: o contencioso trabalhista de vocês <b class="var">dobrou em 12 meses</b> e o escritório abriu <b class="var">2 vagas para trabalhista</b> na mesma semana. Crescimento assim costuma cobrar um preço silencioso: hora trabalhada que não vira fatura.<br/><br/>Em escritórios de 30 a 40 advogados, o vazamento típico é de <b class="var">3h por advogado por semana</b>. No seu caso, algo perto de <b class="var">R$ 180 mil por ano</b> escorrendo pelo registro.<br/><br/>Tenho um diagnóstico de 30 minutos que mostra onde isso acontece no seu fluxo. Te mando <b class="var">dois horários</b> na quinta ou prefere sexta de manhã?`,
     },
     {
-      chips: ["Renata Kim", "diretora comercial", "LogBr Transportes", "dor: cotações paradas"],
-      html: `Renata, empresas de logística como a <b class="var">LogBr</b> costumam perder negócio no mesmo lugar: a cotação sai rápido, o <b class="var">follow-up</b> não. O cliente esfria antes da segunda conversa.<br/><br/>Montamos um fluxo que reativa <b class="var">cotações paradas</b> em 48h. Posso te mostrar como ficaria com a sua operação?`,
+      chips: ["Renata Kim ◆ diretora comercial", "LogBr ◆ 120 veículos", "sinal: cotação só por formulário", "tech: RD Station detectado"],
+      html: `Renata, pedi uma cotação no site da <b class="var">LogBr</b> na terça às 9h41. A resposta chegou <b class="var">26 horas depois</b>, educada e completa. O problema: nesse mercado, <b class="var">78% das cargas fecham com quem responde primeiro</b>.<br/><br/>Vocês já rodam <b class="var">RD Station</b>, então dá para resolver sem trocar nada: um fluxo que responde a cotação em <b class="var">15 minutos</b> e reativa as que esfriaram em <b class="var">48h</b>.<br/><br/>Posso te mostrar o desenho exato com a sua operação na tela, em 20 minutos. Quarta 10h ou quinta 16h?`,
     },
     {
-      chips: ["Paulo Mendes", "sócio", "TechFlow ERP", "dor: pipeline imprevisível"],
-      html: `Paulo, quem vende ERP como a <b class="var">TechFlow</b> conhece o ciclo: trimestre bom, trimestre seco. O problema quase nunca é o produto, é a <b class="var">previsibilidade do topo do funil</b>.<br/><br/>Temos um sistema que coloca <b class="var">reuniões qualificadas</b> na agenda todos os meses. Vale uma conversa de 20 minutos?`,
+      chips: ["Paulo Mendes ◆ sócio", "TechFlow ◆ ERP industrial", "sinal: estande na Mercopar", "evento: 400+ leads de feira"],
+      html: `Paulo, vi a <b class="var">TechFlow</b> na Mercopar. Estande cheio, provavelmente <b class="var">400 leads ou mais</b> no crachá. Agora vem a parte que ninguém fala: lead de feira <b class="var">morre em 9 dias</b> se ninguém conversa com ele, e o seu time está ocupado fechando o trimestre.<br/><br/>A gente coloca um agente para <b class="var">retomar cada conversa da feira</b>, um a um, com contexto do que a pessoa viu no estande, e agenda direto para os seus vendedores.<br/><br/>Se 10% virarem reunião, são <b class="var">40 conversas qualificadas</b> saindo de um custo que você já pagou. Vale 20 minutos essa semana?`,
     },
   ];
   const chipsEl = document.getElementById("leadChips");
@@ -973,7 +1369,7 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
       const partial = pi < parts.length && !parts[pi].startsWith("<")
         ? out + parts[pi].slice(0, ci) : out;
       bodyEl.innerHTML = partial + caret;
-      setTimeout(step, 14);
+      setTimeout(step, 11);
     }
     setTimeout(step, 550);
   }
@@ -984,12 +1380,15 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   /* ---------- agente / chat ---------- */
   const chatBody = document.getElementById("chatBody");
   const script = [
-    { who: "lead", t: "Oi! Recebi o email de vocês. Como funciona na prática?" },
-    { who: "bot", t: "Oi, Marcos! Boa tarde 😊 A gente implementa uma IA que encontra empresas com potencial de compra e começa as conversas por vocês. Posso te fazer duas perguntas rápidas pra ver se faz sentido aí?" },
-    { who: "lead", t: "Pode sim" },
-    { who: "bot", t: "Vocês vendem para outras empresas e já têm processo comercial rodando?" },
-    { who: "lead", t: "Sim, temos 3 vendedores e usamos CRM" },
-    { who: "bot", t: "Perfeito, é exatamente o nosso fit ideal. Vou te passar dois horários para uma demo com o especialista, pode ser?" },
+    { who: "lead", t: "Oi! Recebi o email sobre a LogBr. Quanto custa isso?" },
+    { who: "bot", t: "Oi, Marcos! Vou direto ao ponto: o valor depende do desenho da operação, e eu não quero te dar um número no chute. Posso te fazer três perguntas rápidas pra chegar num número honesto?" },
+    { who: "lead", t: "Pode." },
+    { who: "bot", t: "Hoje quem prospecta são os próprios vendedores ou vocês têm SDR dedicado?" },
+    { who: "lead", t: "Os vendedores mesmo. E rende pouco, pra ser sincero" },
+    { who: "bot", t: "É o padrão que mais vemos: vendedor bom de fechamento é caro demais pra passar o dia prospectando. Última pergunta: quantas reuniões novas por mês mudariam o trimestre de vocês?" },
+    { who: "lead", t: "Umas 12 já mudariam o jogo" },
+    { who: "bot", t: "Então faz sentido continuar. Com essa meta, o investimento normalmente se paga com 1 contrato fechado. Te passo dois horários com o especialista e já deixo um diagnóstico do seu funil preparado. Quinta 10:30 ou sexta 15h?" },
+    { who: "lead", t: "Quinta 10:30" },
   ];
   let chatOn = false;
   function playChat() {
@@ -1015,9 +1414,10 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
           if (i === script.length - 1) {
             const st = document.createElement("div");
             st.className = "cstatus";
-            st.textContent = "✓ lead qualificado → enviado ao comercial";
+            st.textContent = "✓ qualificado ◆ dor mapeada ◆ reunião marcada";
             chatBody.appendChild(st);
             setTimeout(() => st.classList.add("on"), reduced ? 0 : 700);
+            setTimeout(() => document.getElementById("handoff")?.classList.add("on"), reduced ? 0 : 1700);
           }
         }, think);
       }, delay);
@@ -1031,14 +1431,15 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   /* ---------- console roboavaliador ---------- */
   const conEl = document.getElementById("console");
   const lines = [
-    ["$ roboavaliador --pre-voo campanha_setembro", ""],
-    ["SPF ......... <span class='ok'>✓ alinhado, registro único</span>", ""],
-    ["DKIM ........ <span class='ok'>✓ seletor k2 ativo</span>", ""],
-    ["DMARC ....... <span class='warn'>⚠ p=none → aplicar quarentena</span>", ""],
-    ["LISTA ....... <span class='ok'>✓ 98,4% de emails válidos</span>", ""],
-    ["COPY 1:1 .... <span class='ok'>✓ prompt auditado, ciclo 7</span>", ""],
-    ["LP .......... <span class='ok'>✓ promessa coerente com o email</span>", ""],
-    ["VEREDITO .... <span class='verd'>correções aplicadas ✓</span>", ""],
+    ["$ roboavaliador --pre-voo campanha_outubro", ""],
+    ["SPF ......... <span class='ok'>✓ alinhado ◆ registro único, sem include órfão</span>", ""],
+    ["DKIM ........ <span class='ok'>✓ seletor k2 ativo ◆ chave 2048 bits</span>", ""],
+    ["DMARC ....... <span class='warn'>⚠ p=none → plano: quarentena em 2 ciclos</span>", ""],
+    ["LISTA ....... <span class='ok'>✓ 98,4% válidos ◆ 62 hard bounces removidos</span>", ""],
+    ["COPY 1:1 .... <span class='ok'>✓ prompt ciclo 7 ◆ spam score 0,3/10</span>", ""],
+    ["LP .......... <span class='ok'>✓ promessa coerente ◆ formulário em 2 campos</span>", ""],
+    ["MEDIÇÃO ..... <span class='ok'>✓ UTM por disparo ◆ webhook de resposta ativo</span>", ""],
+    ["VEREDITO .... <span class='verd'>1 correção obrigatória aplicada ✓</span>", ""],
     ["<span class='go-stamp'>GO PARA LANÇAMENTO</span>", "stamp"],
   ];
   conEl.innerHTML = lines.map(([t]) => `<span class="ln">${t}</span>`).join("");
@@ -1080,13 +1481,18 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
   if (!reduced && matchMedia("(hover: hover)").matches) {
     document.querySelectorAll(".tiltcard").forEach((card) => {
       let rafId = null;
+      const sh = document.createElement("i");
+      sh.className = "shine";
+      card.appendChild(sh);
       card.addEventListener("pointermove", (e) => {
         const r = card.getBoundingClientRect();
         const px = (e.clientX - r.left) / r.width - 0.5;
         const py = (e.clientY - r.top) / r.height - 0.5;
         if (rafId) cancelAnimationFrame(rafId);
         rafId = requestAnimationFrame(() => {
-          card.style.transform = `perspective(1100px) rotateX(${(-py * 4).toFixed(2)}deg) rotateY(${(px * 5).toFixed(2)}deg)`;
+          card.style.transform = `perspective(1100px) rotateX(${(-py * 5.5).toFixed(2)}deg) rotateY(${(px * 6.5).toFixed(2)}deg)`;
+          card.style.setProperty("--gx", ((px + 0.5) * 100).toFixed(1) + "%");
+          card.style.setProperty("--gy", ((py + 0.5) * 100).toFixed(1) + "%");
         });
       });
       card.addEventListener("pointerleave", () => {
@@ -1108,6 +1514,203 @@ footer .cols a:hover { color: var(--ink); border-color: var(--ink); }
       });
       b.addEventListener("pointerleave", () => { b.style.transform = ""; b.style.transition = "transform .5s cubic-bezier(.22,1,.36,1)"; setTimeout(() => b.style.transition = "", 500); });
     });
+  }
+
+  /* ---------- manifesto palavra a palavra ---------- */
+  document.querySelectorAll("#manifesto .ml > span").forEach((line) => {
+    const words = line.textContent.trim().split(/\s+/);
+    line.innerHTML = words.map((w, i) => `<span class="w" style="transition-delay:${i * 55}ms">${w}</span>`).join(" ");
+  });
+
+  /* ---------- títulos decodificando ---------- */
+  const GLY = "◆◇▮▯░▒/+×<>01";
+  function scramble(el) {
+    const orig = el.textContent;
+    el.style.minHeight = el.getBoundingClientRect().height + "px";
+    let f = 0;
+    const step = Math.max(0.55, orig.length / 44);
+    (function fr() {
+      f += step;
+      const solved = Math.min(orig.length, Math.floor(f));
+      let tail = "";
+      for (const ch of orig.slice(solved)) tail += ch === " " ? " " : GLY[(Math.random() * GLY.length) | 0];
+      el.textContent = orig.slice(0, solved) + tail;
+      if (solved < orig.length) requestAnimationFrame(fr);
+      else { el.textContent = orig; el.style.minHeight = ""; }
+    })();
+  }
+  const ioScr = new IntersectionObserver((es) => {
+    es.forEach((e) => {
+      if (e.isIntersecting) { if (!reduced) scramble(e.target); ioScr.unobserve(e.target); }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll(".scr").forEach((el) => ioScr.observe(el));
+
+  /* ---------- log de operação (revops) ---------- */
+  const opsEl = document.getElementById("ops");
+  const opsFeed = [
+    ["ag", "agente-sdr", "detectou sinal de compra: <b>LogBr abriu 2 vagas de vendedor</b> ◆ conta priorizada"],
+    ["ag", "agente-sdr", "pesquisou a conta e escreveu email 1:1 ◆ enviado para aprovação"],
+    ["hu", "humano", "aprovou o envio ◆ fila crítica revisada em 4 min"],
+    ["si", "sistema", "email entregue ◆ SPF, DKIM e DMARC verificados no disparo"],
+    ["ag", "agente-crm", "criou oportunidade no CRM ◆ etapa: conexão ◆ dono: Camila"],
+    ["ag", "agente-crm", "higiene: <b>214 contatos duplicados</b> normalizados no ciclo"],
+    ["ag", "agente-sdr", "resposta positiva de M. Duarte ◆ propôs dois horários"],
+    ["si", "sistema", "reunião confirmada qui 10:30 ◆ convite na agenda do vendedor"],
+    ["ag", "agente-auditor", "pré-voo da campanha outubro: <b>GO</b> ◆ 0 riscos críticos"],
+    ["ag", "agente-auditor", "flag: DMARC em p=none ◆ correção sugerida e documentada"],
+    ["hu", "humano", "ajustou o tom do playbook jurídico ◆ versão 14 publicada"],
+    ["ag", "agente-sdr", "aprendizado: CTA com dois horários responde <b>31% mais</b>"],
+  ];
+  let opsI = 0, opsClock = 9 * 3600 + 41 * 60 + 7, opsTimer = null;
+  function opsTick() {
+    opsClock += 3 + ((Math.random() * 38) | 0);
+    const hh = String((opsClock / 3600) | 0).padStart(2, "0");
+    const mm = String(((opsClock % 3600) / 60) | 0).padStart(2, "0");
+    const ss = String(opsClock % 60).padStart(2, "0");
+    const [k, actor, tx] = opsFeed[opsI % opsFeed.length]; opsI++;
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `<span class="tm">${hh}:${mm}:${ss}</span><span class="tag ${k}">${actor}</span><span class="tx">${tx}</span>`;
+    opsEl.appendChild(row);
+    requestAnimationFrame(() => requestAnimationFrame(() => row.classList.add("on")));
+    const rows = opsEl.querySelectorAll(".row");
+    if (rows.length > 7) {
+      const first = rows[0];
+      first.style.transition = "opacity .35s ease, margin-top .5s cubic-bezier(.22,1,.36,1) .05s";
+      first.style.opacity = "0";
+      first.style.marginTop = -first.offsetHeight + "px";
+      setTimeout(() => first.remove(), 650);
+    }
+  }
+  let opsSeeded = false;
+  if (opsEl) {
+    new IntersectionObserver((es) => {
+      es.forEach((e) => {
+        if (e.isIntersecting && !opsTimer) {
+          if (!opsSeeded) { opsSeeded = true; for (let k = 0; k < 4; k++) setTimeout(opsTick, k * 230); }
+          else opsTick();
+          opsTimer = setInterval(opsTick, reduced ? 3400 : 1800);
+        } else if (!e.isIntersecting && opsTimer) { clearInterval(opsTimer); opsTimer = null; }
+      });
+    }, { threshold: 0.25 }).observe(opsEl);
+  }
+
+  /* ---------- esteira do agente: fluxo vivo ---------- */
+  const fMain = document.getElementById("fMain"), fRet = document.getElementById("fRet"), fPk = document.getElementById("fPk");
+  if (fMain && fPk) {
+    const NSVG = "http://www.w3.org/2000/svg";
+    const Lm = fMain.getTotalLength(), Lr = fRet.getTotalLength();
+    fMain.style.strokeDasharray = Lm; fMain.style.strokeDashoffset = Lm;
+    const packs = [
+      { p: fMain, L: Lm, t: 0.02, sp: 0.0026, rev: false }, { p: fMain, L: Lm, t: 0.36, sp: 0.0021, rev: false },
+      { p: fMain, L: Lm, t: 0.7, sp: 0.003, rev: false },
+      { p: fRet, L: Lr, t: 0.18, sp: 0.0016, rev: true }, { p: fRet, L: Lr, t: 0.62, sp: 0.0016, rev: true },
+    ];
+    packs.forEach((pk) => {
+      pk.halo = document.createElementNS(NSVG, "circle");
+      pk.halo.setAttribute("r", "7"); pk.halo.style.fill = "var(--glow)";
+      pk.dot = document.createElementNS(NSVG, "circle");
+      pk.dot.setAttribute("r", "3"); pk.dot.style.fill = pk.rev ? "var(--acc-2)" : "var(--acc)";
+      fPk.appendChild(pk.halo); fPk.appendChild(pk.dot);
+    });
+    let flowOn = false;
+    new IntersectionObserver((es) => {
+      es.forEach((e) => {
+        if (e.isIntersecting && !flowOn) {
+          fMain.style.transition = "stroke-dashoffset 1.6s cubic-bezier(.22,1,.36,1) .15s";
+          fMain.style.strokeDashoffset = "0";
+        }
+        flowOn = e.isIntersecting;
+      });
+    }, { threshold: 0.2 }).observe(fMain.closest("svg"));
+    (function flowLoop() {
+      requestAnimationFrame(flowLoop);
+      if (!flowOn || reduced) return;
+      packs.forEach((pk) => {
+        pk.t += pk.sp; if (pk.t > 1) pk.t = 0;
+        const at = pk.p.getPointAtLength((pk.rev ? 1 - pk.t : pk.t) * pk.L);
+        pk.dot.style.transform = `translate(${at.x}px, ${at.y}px)`;
+        pk.halo.style.transform = `translate(${at.x}px, ${at.y}px)`;
+      });
+    })();
+  }
+
+  /* ---------- contadores dos kpis ---------- */
+  const kpisEl = document.getElementById("kpis");
+  if (kpisEl) {
+    new IntersectionObserver((es, obs) => {
+      es.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.querySelectorAll("[data-kcount]").forEach((el) => {
+          const target = parseFloat(el.dataset.kcount);
+          if (reduced) { el.textContent = target; return; }
+          const t0 = performance.now(), dur = 1500;
+          (function frame(now) {
+            const k = Math.min(1, (now - t0) / dur);
+            el.textContent = Math.round(target * (1 - Math.pow(1 - k, 3)));
+            if (k < 1) requestAnimationFrame(frame);
+          })(t0);
+        });
+        obs.disconnect();
+      });
+    }, { threshold: 0.4 }).observe(kpisEl);
+  }
+
+  /* ---------- cta: letras magnéticas ---------- */
+  const ctaH = document.querySelector("#cta h2");
+  if (ctaH && !reduced && matchMedia("(hover: hover)").matches) {
+    const raw = ctaH.textContent;
+    ctaH.setAttribute("aria-label", raw);
+    ctaH.innerHTML = raw.split(" ").map((w) =>
+      `<span class="wd" aria-hidden="true">${[...w].map((c) => `<span class="ch">${c}</span>`).join("")}</span>`
+    ).join(" ");
+    const chs = [...ctaH.querySelectorAll(".ch")].map((el) => ({ el, y: 0 }));
+    let bases = [], ctaVis = false, pX = -1e4, pY = -1e4;
+    function measure() {
+      chs.forEach((c) => { c.el.style.transform = ""; });
+      bases = chs.map((c) => {
+        const r = c.el.getBoundingClientRect();
+        return { x: r.left + scrollX + r.width / 2, y: r.top + scrollY + r.height / 2 };
+      });
+    }
+    addEventListener("resize", () => { if (bases.length) measure(); });
+    new IntersectionObserver((es) => {
+      es.forEach((e) => {
+        ctaVis = e.isIntersecting;
+        if (ctaVis) setTimeout(measure, 900); // espera o reveal assentar
+      });
+    }, { threshold: 0.15 }).observe(ctaH);
+    addEventListener("pointermove", (e) => { pX = e.clientX; pY = e.clientY; }, { passive: true });
+    (function waveLoop() {
+      requestAnimationFrame(waveLoop);
+      if (!ctaVis || !bases.length) return;
+      const mxp = pX + scrollX, myp = pY + scrollY;
+      chs.forEach((c, i) => {
+        const b = bases[i]; if (!b) return;
+        const d = Math.hypot(b.x - mxp, b.y - myp);
+        const k = Math.max(0, 1 - d / 240);
+        const target = k * k * 40;
+        c.y += (target - c.y) * 0.16;
+        if (c.y > 0.15) {
+          c.el.style.transform = `translateY(${(-c.y).toFixed(2)}px) rotate(${(c.y * 0.16).toFixed(2)}deg)`;
+          c.el.style.color = c.y > 9 ? "var(--acc-ink)" : "";
+        } else if (c.el.style.transform) {
+          c.el.style.transform = ""; c.el.style.color = "";
+        }
+      });
+    })();
+  }
+
+  /* ---------- footer: farol no wordmark ---------- */
+  const fw = document.querySelector("footer .word");
+  if (fw && matchMedia("(hover: hover)").matches) {
+    fw.addEventListener("pointermove", (e) => {
+      const r = fw.getBoundingClientRect();
+      fw.classList.add("lit");
+      fw.style.setProperty("--fx", (((e.clientX - r.left) / r.width) * 100).toFixed(1) + "%");
+    });
+    fw.addEventListener("pointerleave", () => fw.classList.remove("lit"));
   }
 
   /* ---------- cursor ---------- */

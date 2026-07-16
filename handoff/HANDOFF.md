@@ -45,7 +45,7 @@ Rodar: `npm install`, criar `.env` com `ANTHROPIC_API_KEY`, `npm start`, abrir `
 | Vídeo v2 (2min13s, com trilha, telas reais do app) | Entregue (`handoff/media/roboavaliador-apresentacao-v2.mp4`) |
 | Roteiro de locução com tempos | Entregue (`handoff/roteiro-locucao.md`) |
 | Site novo belgos.co | Entregue (`site/index.html`, arquivo único, tema escuro/claro) |
-| **Upgrade do site (pedido mais recente)** | **EM ANDAMENTO, spec completa na seção 5** |
+| Upgrade do site (globo 3D, revops, exemplos profundos) | Entregue, implementado conforme a spec da seção 5 |
 
 **Pendência aguardando o usuário:** ele vai gravar a locução seguindo o roteiro e mandar o
 arquivo de áudio. Aí é mixar por cima da trilha do vídeo v2, ajustando os tempos (seção 7).
@@ -64,18 +64,17 @@ GO), `#produtos` (5 linhas), `#fit`, `#processo`, `#difs`, `#cta`, footer com wo
 Cursor custom, cartões com tilt 3D, botões magnéticos, parallax no hero, marquee com velocidade
 ligada ao scroll. `prefers-reduced-motion` respeitado em tudo.
 
-## 5. TAREFA EM ANDAMENTO: upgrade do site
+## 5. Upgrade do site (IMPLEMENTADO; a spec abaixo descreve o que existe no código)
 
 Pedido do usuário, na íntegra da intenção: animações muito mais fortes e incríveis, exemplos
 de mensagem muito mais profundos (nível sobre-humano), a parte de Agentes de IA e RevOps
 muito mais profunda e ultra madura, algo 3D ou 4D incrível, impactante e inesquecível na
 mente do lead. Liberdade criativa para o que mais for relevante.
 
-**Estado:** apenas a primeira edição de CSS foi aplicada e commitada (manifesto palavra a
-palavra: regras `#manifesto .ml .w` prontas, falta o JS que divide as palavras em spans `.w`
-com `transition-delay` escalonado; sem o JS o texto aparece estático, sem quebra).
+**Estado:** tudo implementado e validado com screenshots (Playwright). O que segue é a
+descrição fiel do que está no `site/index.html`.
 
-### 5.1 Plano aprovado internamente (implementar tudo)
+### 5.1 O que foi construído
 
 **A. Hero 3D: globo de sinais** (substitui o radar 2D no mesmo canvas `#radar`, ~720 pontos
 em esfera de Fibonacci, canvas 2D com projeção perspectiva, sem WebGL):
