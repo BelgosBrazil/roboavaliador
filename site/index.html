@@ -214,9 +214,10 @@ section { padding: 120px 0; position: relative; }
   font-family: var(--disp); font-weight: 600; font-size: clamp(26px, 4vw, 56px);
   line-height: 1.14; letter-spacing: -.025em; max-width: 1080px;
 }
-#manifesto .ml { display: block; overflow: hidden; }
-#manifesto .ml span { display: inline-block; transform: translateY(110%); transition: transform .9s cubic-bezier(.22,1,.36,1); }
-#manifesto .ml.in span { transform: none; }
+#manifesto .ml { display: block; overflow: hidden; padding-bottom: .12em; margin-bottom: -.06em; }
+#manifesto .ml .w { display: inline-block; transform: translateY(118%) rotate(2.4deg); opacity: 0; filter: blur(10px); transition: transform .85s cubic-bezier(.22,1,.36,1), opacity .7s ease, filter .85s ease; }
+#manifesto .ml.in .w { transform: none; opacity: 1; filter: none; }
+#manifesto .hl .w { background: linear-gradient(100deg, var(--acc-2), var(--acc)); -webkit-background-clip: text; background-clip: text; }
 #manifesto .hl {
   background: linear-gradient(100deg, var(--acc-2), var(--acc));
   -webkit-background-clip: text; background-clip: text; color: transparent;

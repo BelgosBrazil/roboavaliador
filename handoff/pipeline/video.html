@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 500; src: url(fonts/manrope-500.woff2) format('woff2'); }
+  @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 600; src: url(fonts/manrope-600.woff2) format('woff2'); }
+  @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 700; src: url(fonts/manrope-700.woff2) format('woff2'); }
+  @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 800; src: url(fonts/manrope-800.woff2) format('woff2'); }
+  @font-face { font-family: 'Sora'; font-style: normal; font-weight: 600; src: url(fonts/sora-600.woff2) format('woff2'); }
+  @font-face { font-family: 'Sora'; font-style: normal; font-weight: 700; src: url(fonts/sora-700.woff2) format('woff2'); }
+  @font-face { font-family: 'Sora'; font-style: normal; font-weight: 800; src: url(fonts/sora-800.woff2) format('woff2'); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; }
+  body {
+    background: #07090f;
+    background-image:
+      radial-gradient(900px 400px at 85% -10%, rgba(91,127,255,.16), transparent 60%),
+      radial-gradient(700px 360px at -10% 10%, rgba(122,77,232,.12), transparent 55%),
+      radial-gradient(rgba(120,140,190,.06) 1px, transparent 1.4px);
+    background-size: auto, auto, 26px 26px;
+    color: #e9edf6;
+    font-family: "Manrope", sans-serif;
+  }
+  body::before {
+    content: ""; position: fixed; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, #3d63ff, #7a4de8 45%, #2440c9); z-index: 50;
+  }
+  /* estado pré-gravação: tela 100% preta até window.__START() */
+  body.pre { background: #000; background-image: none; }
+  body.pre::before, body.pre .vprog { display: none; }
+
+  .slide {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 60px 90px; opacity: 0; transform: translateY(14px) scale(.985);
+    transition: opacity .55s ease, transform .55s ease; pointer-events: none;
+  }
+  .slide.active { opacity: 1; transform: none; }
+  .slide.leaving { opacity: 0; transform: translateY(-12px) scale(.99); }
+
+  h1 { font-family: "Sora", sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+  .grad {
+    background: linear-gradient(100deg, #7c9aff, #b191ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .anim { opacity: 0; transform: translateY(18px); }
+  .active .anim { animation: rise .65s cubic-bezier(.22,1,.36,1) both; }
+  .active .d1 { animation-delay: .15s; } .active .d2 { animation-delay: .5s; }
+  .active .d3 { animation-delay: .85s; } .active .d4 { animation-delay: 1.2s; }
+  .active .d5 { animation-delay: 1.55s; } .active .d6 { animation-delay: 1.9s; }
+  .active .d7 { animation-delay: 2.25s; } .active .d8 { animation-delay: 2.6s; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  .mark {
+    width: 96px; height: 96px; border-radius: 26px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #5b7fff, #3d55d6); font-size: 44px; color: #fff;
+    box-shadow: 0 0 60px rgba(91,127,255,.55), 0 10px 30px rgba(0,0,0,.5);
+    margin-bottom: 26px;
+  }
+  .kicker {
+    font-size: 15px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
+    color: #7c9aff; margin-bottom: 18px;
+  }
+  .sub { font-size: 24px; color: #9aa8c2; font-weight: 600; line-height: 1.5; max-width: 900px; }
+
+  /* slide 1 */
+  .s1 h1 { font-size: 52px; line-height: 1.2; }
+  .s1 .q { font-size: 54px; margin-top: 10px; }
+
+  /* slide 3 — funil */
+  .funnel { display: flex; gap: 12px; margin-top: 40px; }
+  .layer {
+    padding: 15px 22px; border-radius: 14px; font-weight: 800; font-size: 19px;
+    border: 1px solid rgba(107,138,255,.35); background: rgba(107,138,255,.10);
+    box-shadow: 0 0 24px rgba(91,127,255,.12);
+  }
+  .arrow { align-self: center; color: #55637f; font-size: 20px; font-weight: 800; }
+
+  /* slide 4 — produto */
+  .shot {
+    margin-top: 30px; width: 880px; height: 420px; object-fit: cover; object-position: top center;
+    border-radius: 16px;
+    border: 1px solid rgba(107,138,255,.35);
+    box-shadow: 0 0 70px rgba(91,127,255,.28), 0 30px 60px rgba(0,0,0,.55);
+  }
+  .bullets { display: flex; gap: 14px; margin-top: 26px; }
+  .pill {
+    padding: 11px 20px; border-radius: 30px; font-weight: 700; font-size: 17.5px;
+    border: 1px solid rgba(107,138,255,.4); background: rgba(107,138,255,.12); color: #cdd9ff;
+  }
+
+  /* slide 5 — relatório mock */
+  .report {
+    margin-top: 34px; width: 860px; text-align: left; background: #10141f;
+    border: 1px solid rgba(107,138,255,.3); border-radius: 18px; padding: 30px 36px;
+    box-shadow: 0 0 60px rgba(91,127,255,.2), 0 24px 50px rgba(0,0,0,.5);
+  }
+  .report h3 { font-family: "Sora", sans-serif; font-size: 24px; margin-bottom: 16px; }
+  .rline { display: flex; gap: 12px; align-items: flex-start; font-size: 20px; font-weight: 600; color: #c6d1e8; margin: 12px 0; }
+  .rline .ic { flex: 0 0 auto; }
+
+  /* slide 6 — pré-voo */
+  .go-row { display: flex; gap: 18px; margin-top: 34px; }
+  .go {
+    font-family: "Sora", sans-serif; font-weight: 800; font-size: 26px; padding: 16px 34px; border-radius: 16px;
+  }
+  .go1 { background: rgba(52,199,143,.14); color: #4ade9d; border: 1px solid rgba(52,199,143,.45); box-shadow: 0 0 30px rgba(52,199,143,.15); }
+  .go2 { background: rgba(240,160,74,.13); color: #f5b56b; border: 1px solid rgba(240,160,74,.45); }
+  .go3 { background: rgba(239,109,132,.13); color: #f4899d; border: 1px solid rgba(239,109,132,.45); }
+
+  /* slide 8 — fechamento */
+  .s8 h1 { font-size: 58px; }
+  .cta {
+    margin-top: 34px; font-family: "Sora", sans-serif; font-size: 25px; font-weight: 700; color: #fff;
+    padding: 18px 44px; border-radius: 16px; background: linear-gradient(135deg, #5b7fff, #3d55d6);
+    box-shadow: 0 0 60px rgba(91,127,255,.5);
+  }
+  .post { margin-top: 22px; font-size: 20px; color: #9aa8c2; font-weight: 600; }
+
+  /* progresso do vídeo */
+  .vprog { position: fixed; bottom: 0; left: 0; height: 5px; width: 0; z-index: 60;
+    background: linear-gradient(90deg, #5b7fff, #b191ff); }
+</style>
+</head>
+<body class="pre">
+
+<section class="slide s1" id="sl1">
+  <div class="kicker anim d1">Belgos · Uma novidade para os nossos clientes</div>
+  <h1 class="anim d2">Estamos elevando o padrão</h1>
+  <h1 class="q grad anim d3">das suas campanhas de prospecção.</h1>
+  <p class="sub anim d4" style="margin-top:30px">Investimos no que há de melhor no mundo em tecnologia de análise de marketing — para atender você ainda melhor e gerar mais resultado.</p>
+</section>
+
+<section class="slide" id="sl2">
+  <div class="mark anim d1">◆</div>
+  <h1 style="font-size:56px" class="anim d2">Roboavaliador</h1>
+  <p class="sub anim d3" style="margin-top:20px">A nova inteligência artificial <strong style="color:#cdd9ff">proprietária da Belgos</strong> que audita as suas campanhas de ponta a ponta — treinada no que funciona no mundo <em>e no Brasil</em>.</p>
+</section>
+
+<section class="slide" id="sl3">
+  <div class="kicker anim d1">Como funciona</div>
+  <h1 style="font-size:44px" class="anim d2">O funil inteiro, <span class="grad">na ordem certa</span></h1>
+  <p class="sub anim d3" style="margin-top:16px">Uma camada quebrada em cima esconde todas as outras.</p>
+  <div class="funnel">
+    <div class="layer anim d3">Infraestrutura</div><div class="arrow anim d4">→</div>
+    <div class="layer anim d4">Lista</div><div class="arrow anim d5">→</div>
+    <div class="layer anim d5">Oferta</div><div class="arrow anim d6">→</div>
+    <div class="layer anim d6">Copy</div><div class="arrow anim d7">→</div>
+    <div class="layer anim d7">Landing Page</div><div class="arrow anim d8">→</div>
+    <div class="layer anim d8">Medição</div>
+  </div>
+</section>
+
+<section class="slide" id="sl4">
+  <h1 style="font-size:42px" class="anim d1">Evidência. <span class="grad">Não achismo.</span></h1>
+  <img class="shot anim d2" src="shots/ultra-dark.png" alt="" />
+  <div class="bullets">
+    <div class="pill anim d3">✓ Verificação DNS real do domínio</div>
+    <div class="pill anim d4">✓ Métricas e planilhas da campanha</div>
+    <div class="pill anim d5">✓ Landing page direto da URL</div>
+  </div>
+</section>
+
+<section class="slide" id="sl5">
+  <div class="kicker anim d1">O que a sua campanha ganha</div>
+  <div class="report anim d2">
+    <h3>⚡ Veredito em 30 segundos</h3>
+    <div class="rline anim d3"><span class="ic">🔴</span><span><strong>Gargalo nº 1 identificado</strong> — com a causa-raiz, não o sintoma</span></div>
+    <div class="rline anim d4"><span class="ic">📋</span><span><strong>Plano de correção priorizado</strong> por impacto × esforço</span></div>
+    <div class="rline anim d5"><span class="ic">✍️</span><span><strong>Emails e páginas reescritos</strong>, prontos para aplicar</span></div>
+    <div class="rline anim d6"><span class="ic">📄</span><span><strong>Relatório executivo em PDF</strong>, apresentado na sua reunião de resultados</span></div>
+  </div>
+</section>
+
+<section class="slide" id="sl6">
+  <div class="kicker anim d1">Antes de qualquer disparo</div>
+  <h1 style="font-size:46px" class="anim d2">✈ Pré-voo: sua campanha só decola com <span class="grad">GO</span></h1>
+  <p class="sub anim d3" style="margin-top:16px">Riscos ranqueados, ajustes obrigatórios e plano de volume —<br/>para proteger a sua lista, o seu domínio e a sua marca.</p>
+  <div class="go-row">
+    <div class="go go1 anim d4">🟢 GO</div>
+    <div class="go go2 anim d5">🟡 GO com ajustes</div>
+    <div class="go go3 anim d6">🔴 NO-GO</div>
+  </div>
+</section>
+
+<section class="slide" id="sl7">
+  <div class="kicker anim d1">Melhoria contínua</div>
+  <h1 style="font-size:46px" class="anim d2">⭐ Aprende com <span class="grad">o que funciona</span></h1>
+  <p class="sub anim d3" style="margin-top:18px">Cada campanha vencedora vira inteligência para a próxima.<br/>A sua operação evolui a cada ciclo — com histórico e comparação de evolução.</p>
+</section>
+
+<section class="slide s8" id="sl8">
+  <div class="mark anim d1">◆</div>
+  <h1 class="anim d2">Belgos</h1>
+  <p class="sub anim d3" style="margin-top:14px; font-size:28px">Prospecção com <strong style="color:#cdd9ff">engenharia</strong>. Não com sorte.</p>
+  <div class="cta anim d4">Já estamos aplicando isso na sua operação</div>
+  <p class="post anim d5">Quer ver a auditoria da sua campanha de perto? Fale com a gente.</p>
+</section>
+
+<div class="vprog" id="vprog"></div>
+
+<script>
+  const DUR = [8000, 8000, 9500, 9500, 9500, 8500, 7500, 9500]; // 70s
+  window.__START = () => {
+    document.body.classList.remove("pre");
+    const slides = [...document.querySelectorAll(".slide")];
+    const total = DUR.reduce((a, b) => a + b, 0);
+    const bounds = [];
+    let acc = 0;
+    for (const d of DUR) { acc += d; bounds.push(acc); }
+    document.getElementById("vprog").animate(
+      [{ width: "0%" }, { width: "100%" }],
+      { duration: total, easing: "linear", fill: "forwards" },
+    );
+    // troca de slide guiada por tempo real (rAF), não por setTimeout:
+    // sob carga de gravação os timers atrasam e a timeline desalinha.
+    const t0 = performance.now();
+    let cur = -1;
+    const tick = () => {
+      const el = performance.now() - t0;
+      let idx = bounds.findIndex((b) => el < b);
+      if (idx === -1) idx = slides.length - 1;
+      if (idx !== cur) {
+        slides.forEach((s, i) => {
+          s.classList.toggle("active", i === idx);
+          s.classList.toggle("leaving", i === idx - 1);
+        });
+        cur = idx;
+      }
+      if (el < total + 2500) requestAnimationFrame(tick);
+    };
+    tick();
+  };
+</script>
+</body>
+</html>
