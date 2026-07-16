@@ -1055,7 +1055,11 @@ footer .word.lit {
 
   /* ---------- tema (com view transition) ---------- */
   const root = document.documentElement;
-  const saved = localStorage.getItem("belgos-site-theme");
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+  const saved = store.get("belgos-site-theme");
   if (saved) root.dataset.theme = saved;
   function isDark() {
     return root.dataset.theme !== "light";
@@ -1064,7 +1068,7 @@ footer .word.lit {
     const next = isDark() ? "light" : "dark";
     const apply = () => {
       root.dataset.theme = next;
-      localStorage.setItem("belgos-site-theme", next);
+      store.set("belgos-site-theme", next);
     };
     if (document.startViewTransition && !reduced) document.startViewTransition(apply);
     else apply();
